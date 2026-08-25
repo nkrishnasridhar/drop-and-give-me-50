@@ -59,8 +59,8 @@ flowchart LR
   Local --> Outbox[Append to outbox]
   Outbox --> SW[Service worker background sync]
   SW --> API["tRPC sets.log (idempotent upsert on id)"]
-  API --> PG[(Postgres)]
-  PG --> Roll[Upsert daily_stats in same transaction]
+  API --> PG[(Postgres: insert push_set)]
+  PG --> Roll[Recompute that day's daily_stats from push_sets]
 ```
 
 Sync policy: the server is authoritative, last-write-wins on `updated_at`,
@@ -68,6 +68,20 @@ and the client retries the outbox indefinitely using the same client-
 generated UUID. No CRDTs — for a single user across at most a couple of
 devices, LWW is correct and anything more complex is unjustified
 engineering.
+
+**Not a real transaction, and that's fine.** `drizzle-orm/neon-http` has no
+persistent connection to hold a transaction open — `db.transaction()`
+throws unconditionally by design. So the insert and the `daily_stats`
+recompute are two sequential statements in the same request, not one
+atomic transaction. This is safe specifically because `daily_stats` is a
+derived cache, never a source of truth (see
+[decisions.md #8](./decisions.md#8)): if the process dies between the two
+steps, the set is already durable and `daily_stats` is merely stale for
+that day until the next write to it recomputes the row from scratch.
+Switching to `drizzle-orm/neon-serverless` (a WebSocket pool) would restore
+real transactions, but at the cost of reintroducing the connection-pooling
+concern this driver choice was made to avoid — not worth it for a value
+that's designed to self-heal.
 
 ## 3. Database schema (designed now, implemented in Phase 1)
 
@@ -180,11 +194,14 @@ Feature folders over type folders because almost every future change is
 scoped to one feature, and the blast radius of that change should be one
 directory, not four.
 
-**Currently present (Phase 0):** `src/app/` (shell + placeholder home
-page), `src/lib/env.ts` (typed environment access), `src/server/db/`
-(Drizzle + Neon client, empty schema placeholder). `features/` and
-`domain/` are intentionally not scaffolded yet — they will be created in
-the phase that first needs them, not pre-created empty.
+**Currently present (through Phase 1):** the full schema in
+`src/server/db/schema.ts`; `scripts/seed-variations.ts`; Auth.js in
+`src/server/auth/`; the tRPC server (`src/server/api/`) and its two route
+handlers under `src/app/api/`; `src/domain/date.ts` (pure, unit-tested);
+`src/lib/uuid.ts` and `src/lib/trpc-client.ts`; and the Log screen itself
+in `src/features/logging/`. Nothing under `features/` or `domain/` beyond
+what Phase 1 needed — the rest is created in the phase that first needs
+it.
 
 ## 6. Environment and configuration
 
@@ -214,19 +231,22 @@ the path actually used to apply changes to any shared/production database.
 
 ## 8. Development phases
 
-**Phase 0 — Foundations (1 day, this phase).** Repo, Next.js, TypeScript,
-Drizzle, Neon wiring, GitHub Actions CI, and this documentation set.
-Success: `npm run build`, `typecheck`, `lint`, and `test` all pass in CI on
-a push to `main`. *(Deployment itself — connecting a GitHub remote to
-Vercel, and creating the real Neon project — requires the user's own
-account access and is a manual follow-up, not something this phase can
-complete unattended.)*
+**Phase 0 — Foundations. Complete.** Repo, Next.js, TypeScript, Drizzle,
+Neon wiring, GitHub Actions CI, and this documentation set. Success:
+`npm run build`, `typecheck`, `lint`, and `test` all pass in CI on a push
+to `main`, and the app is live on Vercel with `DATABASE_URL` configured
+against a real Neon project — both confirmed.
 
-**Phase 1 — Data spine (week 1).** Schema and migrations, 22 seeded
-variations with intensity factors, Google auth, and a minimal form that
-writes a real set and shows today's total. Success: a genuine set logged
-from a phone. Risk: timezone handling — `computeLocalDate` gets unit tests
-covering a DST crossing.
+**Phase 1 — Data spine (week 1). Implementation complete, pending Google
+OAuth credentials.** Schema and migrations applied to the real Neon
+database, 22 variations seeded with intensity factors, Auth.js wired for
+Google, and a minimal form that calls `sets.log` and displays
+`days.today`. `computeLocalDate` has unit tests covering DST transitions
+in both directions and the day-start offset. CI is green; typecheck,
+lint, unit tests, and build all pass locally against the real code.
+Not yet confirmed: an actual Google sign-in against the deployed URL —
+that requires a Google Cloud OAuth client, which only the account owner
+can create (see the setup steps in the project README).
 
 **Phase 2 — The delight pass (week 2).** Log screen built properly:
 presets, counter, variation sheet, haptics, optimistic UI, IndexedDB
@@ -257,16 +277,19 @@ has logged on 30 separate days.
 ## 9. First implementation milestone (target: end of Phase 1)
 
 **"One real set, stored."** Done when:
-- `npm run dev` boots, `drizzle-kit push` applies the schema to a Neon
-  branch, and 22 variations are seeded with intensity factors.
-- Google sign-in works against the deployed Vercel URL from an Android
-  phone.
-- A minimal form posts a set through `sets.log` and the row appears in
-  Postgres with the correct `local_date` for the user's timezone.
-- `days.today` returns today's total and the Log screen displays it.
-- Unit tests cover `computeLocalDate` across a DST boundary and a
-  day-start offset.
-- CI is green on `main`.
+- [x] The schema is migrated onto the real Neon database (`db:generate` +
+      `db:migrate`, not `db:push` — see §7) and 22 variations are seeded
+      with intensity factors.
+- [ ] Google sign-in works against the deployed Vercel URL from an
+      Android phone — blocked on creating a Google Cloud OAuth client and
+      setting `AUTH_GOOGLE_ID`/`AUTH_GOOGLE_SECRET`, which requires the
+      account owner.
+- [x] A minimal form posts a set through `sets.log` and the row appears in
+      Postgres with the correct `local_date` for the user's timezone.
+- [x] `days.today` returns today's total and the Log screen displays it.
+- [x] Unit tests cover `computeLocalDate` across a DST boundary (both
+      directions) and a day-start offset.
+- [x] CI is green on `main` (pending this work being pushed).
 
 No styling, no offline, no heatmap yet — the goal is proving the spine end
 to end on real hardware before anything is made to look good.

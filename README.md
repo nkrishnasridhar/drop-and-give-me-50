@@ -13,8 +13,10 @@ deliberate choice, not a limitation.
 
 ## Status
 
-**Phase 0 — Foundations.** The app currently boots to a placeholder page.
-The logging screen, database schema, and auth arrive in Phase 1.
+**Phase 1 — Data spine.** Schema migrated, 22 push-up variations seeded,
+Google auth wired, and a minimal form logs a real set and shows today's
+total. Styling, offline support, and history arrive in later phases — see
+[docs/architecture.md §8](./docs/architecture.md#8-development-phases).
 
 ## Stack
 
@@ -26,11 +28,37 @@ Next.js (App Router) + TypeScript + React, tRPC, Drizzle ORM on Postgres
 
 ```bash
 npm install
-cp .env.example .env.local   # then fill in DATABASE_URL from a Neon project
+cp .env.example .env.local   # then fill in the values below
+npm run db:migrate            # apply the schema to your database
+npm run db:seed               # seed the 22 push-up variations
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+
+### Required environment variables
+
+- `DATABASE_URL` — a Neon Postgres connection string.
+- `AUTH_SECRET` — session/cookie signing secret. Generate with
+  `npx auth secret`, or any long random string. Use a different value per
+  environment (local vs. Vercel).
+- `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` — a Google OAuth 2.0 client:
+  1. Go to the [Google Cloud Console credentials
+     page](https://console.cloud.google.com/apis/credentials), create a
+     project if you don't have one.
+  2. Configure the OAuth consent screen (External, or Internal if using a
+     Google Workspace account) — for personal use, add yourself as a test
+     user.
+  3. Create an OAuth client ID of type **Web application**.
+  4. Add an authorized redirect URI for every environment you use it in,
+     exactly: `<origin>/api/auth/callback/google` — e.g.
+     `http://localhost:3000/api/auth/callback/google` for local dev, and
+     `https://<your-vercel-domain>/api/auth/callback/google` for
+     production.
+  5. Copy the generated **Client ID** and **Client secret** into
+     `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET` locally, and into the
+     Vercel project's environment variables for production (with the
+     production redirect URI added in step 4).
 
 ## Scripts
 
@@ -46,6 +74,7 @@ Open [http://localhost:3000](http://localhost:3000).
 | `npm run db:migrate` | Apply generated migrations to `DATABASE_URL` |
 | `npm run db:push` | Push the schema directly (fast local iteration only) |
 | `npm run db:studio` | Open Drizzle Studio against `DATABASE_URL` |
+| `npm run db:seed` | Seed/update the 22 push-up variations |
 
 ## CI
 

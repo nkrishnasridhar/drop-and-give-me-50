@@ -5,12 +5,18 @@ on:
     branches: [main]
   pull_request:
 
-# DATABASE_URL here is a placeholder, not a real database. `drizzle-kit
-# generate` only diffs src/server/db/schema.ts against drizzle/meta
+# These are placeholders, not real credentials. DATABASE_URL: drizzle-kit
+# generate only diffs src/server/db/schema.ts against drizzle/meta
 # locally — it never connects — but drizzle.config.ts still requires the
-# variable to be present to construct its config object.
+# variable to be present to construct its config object. The AUTH_* vars
+# are read by NextAuth() at module load time (src/server/auth/index.ts),
+# which happens during `next build`'s page-data collection step even
+# though no request is ever made.
 env:
   DATABASE_URL: postgres://ci:ci@localhost:5432/ci
+  AUTH_SECRET: ci-placeholder-secret-not-for-real-use
+  AUTH_GOOGLE_ID: ci-placeholder-google-id
+  AUTH_GOOGLE_SECRET: ci-placeholder-google-secret
 
 jobs:
   ci:
