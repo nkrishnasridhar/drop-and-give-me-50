@@ -13,9 +13,10 @@ deliberate choice, not a limitation.
 
 ## Status
 
-**Phase 1 — Data spine.** Schema migrated, 22 push-up variations seeded,
-Google auth wired, and a minimal form logs a real set and shows today's
-total. Styling, offline support, and history arrive in later phases — see
+**Phase 2 — Delight and offline.** The Log screen is the product: one-tap
+presets, a stepper, a variation sheet, haptics, and writes that hit
+IndexedDB before the network. Installable as a PWA with "Log 20" / "Log 50"
+shortcuts. History, stats, and reminders arrive in later phases — see
 [docs/architecture.md §8](./docs/architecture.md#8-development-phases).
 
 ## Stack

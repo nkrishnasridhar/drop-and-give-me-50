@@ -1,0 +1,254 @@
+.screen {
+  width: 100%;
+  max-width: 26rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.today {
+  text-align: center;
+}
+
+.todayLabel {
+  margin: 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.todayTotal {
+  margin: 0.15rem 0 0;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-size: clamp(4.5rem, 18vw, 6.5rem);
+  font-weight: 700;
+  line-height: 0.9;
+  letter-spacing: -0.06em;
+  font-variant-numeric: tabular-nums;
+}
+
+.todayMeta {
+  margin: 0.55rem 0 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.syncing {
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  color: var(--accent);
+}
+
+.variationRow {
+  display: flex;
+  justify-content: center;
+}
+
+.variationChip,
+.noteToggle {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--foreground);
+  border-radius: 999px;
+  padding: 0.55rem 0.95rem;
+  font: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.variationChip {
+  max-width: 100%;
+}
+
+.counterBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.counter {
+  margin: 0;
+  font-size: clamp(3rem, 12vw, 4.25rem);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.05em;
+  line-height: 1;
+}
+
+.stepper {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.stepper button {
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--foreground);
+  font-size: 1.75rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.presets {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
+  width: 100%;
+}
+
+.preset {
+  appearance: none;
+  min-height: 3.25rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--foreground);
+  border-radius: 1rem;
+  font: inherit;
+  font-size: 1.15rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.preset:disabled,
+.primary:disabled,
+.stepper button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.primary {
+  appearance: none;
+  width: 100%;
+  min-height: 3.5rem;
+  border: 0;
+  border-radius: 1.1rem;
+  background: var(--accent);
+  color: var(--accent-text);
+  font: inherit;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.noteToggle {
+  align-self: center;
+}
+
+.noteInput {
+  width: 100%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--foreground);
+  border-radius: 0.9rem;
+  padding: 0.75rem 0.9rem;
+  font: inherit;
+}
+
+.error {
+  margin: 0;
+  color: var(--danger);
+  text-align: center;
+}
+
+.sheetRoot {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.sheetBackdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(0, 0, 0, 0.55);
+  cursor: pointer;
+}
+
+.sheet {
+  position: relative;
+  width: min(100%, 32rem);
+  max-height: min(86dvh, 40rem);
+  overflow: auto;
+  background: var(--surface);
+  border-top-left-radius: 1.5rem;
+  border-top-right-radius: 1.5rem;
+  padding: 0.75rem 1.1rem calc(1.25rem + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.sheetHandle {
+  width: 2.5rem;
+  height: 0.3rem;
+  border-radius: 999px;
+  background: var(--border);
+  margin: 0.2rem auto 0.6rem;
+}
+
+.sheetTitle {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.sheetHint {
+  margin: 0 0 0.6rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.sheetList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sheetGroupTitle {
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.sheetItem,
+.sheetItemSelected {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  padding: 0.7rem 0.35rem;
+  border-radius: 0.7rem;
+  cursor: pointer;
+}
+
+.sheetItemSelected {
+  background: var(--surface-2);
+}
+
+.sheetItemName {
+  min-width: 0;
+}
+
+.sheetItemMeta {
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}

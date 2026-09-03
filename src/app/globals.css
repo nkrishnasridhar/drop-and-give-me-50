@@ -1,11 +1,18 @@
 /*
  * One dark theme, no theming system (see docs/decisions.md #9).
- * Full visual identity (typography, accent colour, motion) is designed
- * in Phase 2; this is just the base so nothing needs to be reversed later.
+ * Visual identity: near-black, one ember accent, tabular numerals on
+ * the counters. The drill-sergeant joke lives in copy, not costume.
  */
 :root {
   --background: #0a0a0a;
-  --foreground: #ededed;
+  --foreground: #f4f0ea;
+  --muted: #9a948c;
+  --surface: #141414;
+  --surface-2: #1c1c1c;
+  --border: #2a2a2a;
+  --accent: #ff5a1f;
+  --accent-text: #140800;
+  --danger: #f87171;
   color-scheme: dark;
 }
 
@@ -31,4 +38,81 @@ body {
 a {
   color: inherit;
   text-decoration: none;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+.appShell {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: calc(1.1rem + env(safe-area-inset-top)) 1.25rem
+    calc(1.5rem + env(safe-area-inset-bottom));
+  gap: 1.5rem;
+}
+
+.appHeader {
+  width: 100%;
+  max-width: 26rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.signOutButton,
+.signInButton {
+  appearance: none;
+  cursor: pointer;
+}
+
+.signOutButton {
+  background: none;
+  border: 0;
+  color: var(--muted);
+  padding: 0.35rem 0;
+}
+
+.signInButton {
+  border: 0;
+  border-radius: 1rem;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-weight: 700;
+  padding: 0.85rem 1.4rem;
+}
+
+.authCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.85rem;
+  flex: 1;
+}
+
+.authCard h1 {
+  margin: 0;
+  font-size: 1.7rem;
+  letter-spacing: -0.03em;
+}
+
+.authCard p {
+  margin: 0;
+  color: var(--muted);
+  max-width: 32ch;
+}
+
+.emptyState {
+  color: var(--muted);
+  text-align: center;
+  max-width: 28ch;
 }

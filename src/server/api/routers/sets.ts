@@ -11,10 +11,13 @@ const logSetInput = z.object({
   id: z.string().uuid(),
   variationId: z.string().min(1),
   reps: z.number().int().min(1).max(500),
-  occurredAt: z.string().datetime().optional(),
+  // Required so an offline set that syncs later keeps the day it was
+  // actually performed, not the day the outbox drained.
+  occurredAt: z.string().datetime(),
   // IANA zone, captured fresh at write time (docs/architecture.md §3).
   tz: z.string().min(1),
   note: z.string().max(500).optional(),
+  source: z.enum(["app", "shortcut"]).default("app"),
 });
 
 export const setsRouter = router({
@@ -25,7 +28,7 @@ export const setsRouter = router({
    * ID is rejected rather than silently overwriting their set.
    */
   log: protectedProcedure.input(logSetInput).mutation(async ({ ctx, input }) => {
-    const occurredAt = input.occurredAt ? new Date(input.occurredAt) : new Date();
+    const occurredAt = new Date(input.occurredAt);
 
     const [settings] = await ctx.db
       .select({ dayStartOffsetMinutes: userSettings.dayStartOffsetMinutes })
@@ -49,7 +52,12 @@ export const setsRouter = router({
 
     const [set] = await ctx.db
       .insert(pushSets)
-      .values({ id: input.id, userId: ctx.userId, source: "app", ...values })
+      .values({
+        id: input.id,
+        userId: ctx.userId,
+        source: input.source,
+        ...values,
+      })
       .onConflictDoUpdate({
         target: pushSets.id,
         set: { ...values, updatedAt: new Date() },

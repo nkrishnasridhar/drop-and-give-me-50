@@ -1,0 +1,221 @@
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
+import { motion } from "motion/react";
+import { useMemo, useState } from "react";
+import { learnPresets } from "@/domain/presets";
+import type { ClientSetSource } from "@/domain/set";
+import { useLogSet } from "@/features/logging/use-log-set";
+import { useTodayTotals } from "@/features/logging/use-today";
+import { VariationSheet } from "@/features/logging/variation-sheet";
+import type { VariationOption } from "@/features/logging/types";
+import {
+  readLastCounter,
+  readLastVariationId,
+  readRecentReps,
+} from "@/lib/offline/db";
+import { useTRPC } from "@/lib/trpc";
+import styles from "./log-screen.module.css";
+
+interface LogScreenProps {
+  variations: VariationOption[];
+  armedReps?: number;
+  source?: ClientSetSource;
+}
+
+export function LogScreen({
+  variations,
+  armedReps,
+  source = "app",
+}: LogScreenProps) {
+  const { logSet } = useLogSet();
+  const today = useTodayTotals();
+  const trpc = useTRPC();
+  useQuery(trpc.variations.list.queryOptions());
+  const [pickedVariationId, setPickedVariationId] = useState<string | null>(
+    null,
+  );
+  const [counterOverride, setCounterOverride] = useState<number | null>(
+    armedReps ?? null,
+  );
+  const [noteOpen, setNoteOpen] = useState(false);
+  const [note, setNote] = useState("");
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const lastVariationQuery = useQuery({
+    queryKey: ["local", "lastVariationId"],
+    queryFn: readLastVariationId,
+  });
+  const lastCounterQuery = useQuery({
+    queryKey: ["local", "lastCounter"],
+    queryFn: readLastCounter,
+  });
+  const recentRepsQuery = useQuery({
+    queryKey: ["local", "recentReps"],
+    queryFn: readRecentReps,
+  });
+
+  const variationId =
+    pickedVariationId ??
+    (lastVariationQuery.data &&
+    variations.some((variation) => variation.id === lastVariationQuery.data)
+      ? lastVariationQuery.data
+      : undefined) ??
+    variations[0]?.id ??
+    "";
+  const selectedVariation = variations.find((variation) => variation.id === variationId);
+  const reps = counterOverride ?? lastCounterQuery.data ?? 20;
+  const presets = useMemo(
+    () => learnPresets(recentRepsQuery.data ?? []),
+    [recentRepsQuery.data],
+  );
+
+  async function commit(nextReps: number, nextSource: ClientSetSource) {
+    if (!variationId) {
+      setError("Pick a variation first.");
+      return;
+    }
+    if (!Number.isInteger(nextReps) || nextReps < 1 || nextReps > 500) {
+      setError("Reps have to be between 1 and 500.");
+      return;
+    }
+
+    setError(null);
+    try {
+      await logSet({
+        variationId,
+        reps: nextReps,
+        note: note.trim() || undefined,
+        source: nextSource,
+      });
+      setCounterOverride(nextReps);
+      setNote("");
+      setNoteOpen(false);
+    } catch (caught) {
+      setError(
+        caught instanceof Error ? caught.message : "Could not save that set.",
+      );
+    }
+  }
+
+  return (
+    <div className={styles.screen}>
+      <div className={styles.today}>
+        <p className={styles.todayLabel}>Today</p>
+        <p className={styles.todayTotal}>
+          <motion.span
+            key={today.totalReps}
+            initial={{ y: 16, opacity: 0.35 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 520, damping: 34 }}
+            style={{ display: "inline-block" }}
+          >
+            {today.totalReps}
+          </motion.span>
+        </p>
+        <p className={styles.todayMeta}>
+          {today.setCount} set{today.setCount === 1 ? "" : "s"}
+        </p>
+        {today.isSyncing && (
+          <p className={styles.syncing}>
+            Saved on this device · {today.pendingCount} waiting to sync
+          </p>
+        )}
+      </div>
+
+      <div className={styles.variationRow}>
+        <button
+          type="button"
+          className={styles.variationChip}
+          onClick={() => setSheetOpen(true)}
+        >
+          {selectedVariation?.name ?? "Choose variation"}
+        </button>
+      </div>
+
+      <div className={styles.counterBlock}>
+        <p className={styles.counter}>
+          <motion.span
+            key={reps}
+            initial={{ y: 10, opacity: 0.4 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 500, damping: 36 }}
+            style={{ display: "inline-block" }}
+          >
+            {reps}
+          </motion.span>
+        </p>
+        <div className={styles.stepper}>
+          <button
+            type="button"
+            aria-label="Decrease reps"
+            disabled={reps <= 1}
+            onClick={() => setCounterOverride(Math.max(1, reps - 1))}
+          >
+            −
+          </button>
+          <button
+            type="button"
+            aria-label="Increase reps"
+            disabled={reps >= 500}
+            onClick={() => setCounterOverride(Math.min(500, reps + 1))}
+          >
+            +
+          </button>
+        </div>
+      </div>
+
+      <div className={styles.presets}>
+        {presets.map((preset) => (
+          <button
+            key={preset}
+            type="button"
+            className={styles.preset}
+            disabled={!variationId}
+            onClick={() => void commit(preset, source)}
+          >
+            {preset}
+          </button>
+        ))}
+      </div>
+
+      <button
+        type="button"
+        className={styles.primary}
+        disabled={!variationId}
+        onClick={() => void commit(reps, source)}
+      >
+        Log {reps}
+      </button>
+
+      {noteOpen ? (
+        <input
+          className={styles.noteInput}
+          value={note}
+          maxLength={500}
+          placeholder="Optional note"
+          onChange={(event) => setNote(event.target.value)}
+        />
+      ) : (
+        <button
+          type="button"
+          className={styles.noteToggle}
+          onClick={() => setNoteOpen(true)}
+        >
+          Add a note
+        </button>
+      )}
+
+      {error && <p className={styles.error}>{error}</p>}
+
+      <VariationSheet
+        open={sheetOpen}
+        variations={variations}
+        selectedId={variationId}
+        onSelect={setPickedVariationId}
+        onClose={() => setSheetOpen(false)}
+      />
+    </div>
+  );
+}

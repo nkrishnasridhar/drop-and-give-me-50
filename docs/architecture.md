@@ -194,14 +194,12 @@ Feature folders over type folders because almost every future change is
 scoped to one feature, and the blast radius of that change should be one
 directory, not four.
 
-**Currently present (through Phase 1):** the full schema in
-`src/server/db/schema.ts`; `scripts/seed-variations.ts`; Auth.js in
-`src/server/auth/`; the tRPC server (`src/server/api/`) and its two route
-handlers under `src/app/api/`; `src/domain/date.ts` (pure, unit-tested);
-`src/lib/uuid.ts` and `src/lib/trpc-client.ts`; and the Log screen itself
-in `src/features/logging/`. Nothing under `features/` or `domain/` beyond
-what Phase 1 needed — the rest is created in the phase that first needs
-it.
+**Currently present (through Phase 2):** Phase 1's schema, auth, and tRPC
+spine, plus the Log screen in `src/features/logging/`, the IndexedDB
+outbox in `src/lib/offline/`, TanStack Query persistence, a Serwist
+service worker (`src/app/sw.ts`) with an `/offline` fallback, and a web
+app manifest with Log 20 / Log 50 shortcuts. History, stats, settings,
+and the 7-day ring are not present yet — they belong to later phases.
 
 ## 6. Environment and configuration
 
@@ -237,23 +235,20 @@ Neon wiring, GitHub Actions CI, and this documentation set. Success:
 to `main`, and the app is live on Vercel with `DATABASE_URL` configured
 against a real Neon project — both confirmed.
 
-**Phase 1 — Data spine (week 1). Implementation complete, pending Google
-OAuth credentials.** Schema and migrations applied to the real Neon
-database, 22 variations seeded with intensity factors, Auth.js wired for
-Google, and a minimal form that calls `sets.log` and displays
-`days.today`. `computeLocalDate` has unit tests covering DST transitions
-in both directions and the day-start offset. CI is green; typecheck,
-lint, unit tests, and build all pass locally against the real code.
-Not yet confirmed: an actual Google sign-in against the deployed URL —
-that requires a Google Cloud OAuth client, which only the account owner
-can create (see the setup steps in the project README).
+**Phase 1 — Data spine (week 1). Complete.** Schema and migrations applied
+to the real Neon database, 22 variations seeded with intensity factors,
+Auth.js wired for Google, and `sets.log` / `days.today` proven end to
+end. `computeLocalDate` has unit tests covering DST transitions in both
+directions and the day-start offset.
 
-**Phase 2 — The delight pass (week 2).** Log screen built properly:
-presets, counter, variation sheet, haptics, optimistic UI, IndexedDB
-outbox, service worker, installable manifest with shortcuts. Success:
-median time-to-log under 5 seconds; three sets logged in airplane mode
-sync correctly on reconnect. This is the highest-risk phase — it decides
-whether the product is viable.
+**Phase 2 — The delight pass (week 2). Implementation complete.** Log
+screen with presets, counter, variation sheet, haptics, and optimistic
+totals; IndexedDB outbox with idempotent drain; Serwist service worker
+via `@serwist/turbopack` (same Serwist runtime, keeping the existing
+Turbopack build instead of forcing webpack); installable manifest with
+Log 20 / Log 50 shortcuts. Playwright's airplane-mode end-to-end test is
+deferred to Phase 6, where the portfolio pass owns it; Phase 2 covers
+the drain path with unit tests in `src/domain/outbox.test.ts`.
 
 **Phase 3 — Memory (week 3).** Heatmap, 7-day ring, grouped history with
 edit/delete, rest days, week-streak computation. Success: the app gets
@@ -280,10 +275,8 @@ has logged on 30 separate days.
 - [x] The schema is migrated onto the real Neon database (`db:generate` +
       `db:migrate`, not `db:push` — see §7) and 22 variations are seeded
       with intensity factors.
-- [ ] Google sign-in works against the deployed Vercel URL from an
-      Android phone — blocked on creating a Google Cloud OAuth client and
-      setting `AUTH_GOOGLE_ID`/`AUTH_GOOGLE_SECRET`, which requires the
-      account owner.
+- [x] Google sign-in works against the deployed Vercel URL from an
+      Android phone — OAuth client created by the account owner.
 - [x] A minimal form posts a set through `sets.log` and the row appears in
       Postgres with the correct `local_date` for the user's timezone.
 - [x] `days.today` returns today's total and the Log screen displays it.

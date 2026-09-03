@@ -13,9 +13,8 @@ export type AppRouter = typeof appRouter;
 
 /**
  * Server-side caller for use directly from React Server Components — no
- * HTTP round trip. The client component data flow (mutations from the
- * Log form) goes through the HTTP handler instead; see
- * src/lib/trpc-client.ts.
+ * HTTP round trip. Client mutations go through the IndexedDB outbox and
+ * `/api/trpc`, not this helper.
  */
 export async function createCaller() {
   const ctx = await createTRPCContext();

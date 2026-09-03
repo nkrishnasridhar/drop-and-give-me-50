@@ -1,80 +1,76 @@
-import { LogForm } from "@/features/logging/log-form";
+import { LogScreen } from "@/features/logging/log-screen";
+import type { ClientSetSource } from "@/domain/set";
 import { createCaller } from "@/server/api/root";
 import { auth, signIn, signOut } from "@/server/auth";
 
-export default async function Home() {
+function parseArmedReps(value: string | undefined): number | undefined {
+  if (!value) return undefined;
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isInteger(parsed) || parsed < 1 || parsed > 500) return undefined;
+  return parsed;
+}
+
+export default async function Home({ searchParams }: PageProps<"/">) {
   const session = await auth();
+  const params = await searchParams;
+  const armedReps = parseArmedReps(
+    typeof params.reps === "string" ? params.reps : undefined,
+  );
+  const source: ClientSetSource =
+    params.source === "shortcut" ? "shortcut" : "app";
 
   if (!session?.user) {
     return (
-      <main
-        style={{
-          minHeight: "100dvh",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "1rem",
-          textAlign: "center",
-          padding: "2rem",
-        }}
-      >
-        <h1 style={{ fontSize: "1.5rem", fontWeight: 600 }}>Drop and Give Me 50</h1>
-        <p style={{ opacity: 0.6, maxWidth: "32ch" }}>Sign in to start logging.</p>
-        <form
-          action={async () => {
-            "use server";
-            await signIn("google");
-          }}
-        >
-          <button
-            type="submit"
-            style={{ padding: "0.75rem 1.5rem", fontSize: "1rem", fontWeight: 600, cursor: "pointer" }}
+      <main className="appShell">
+        <div className="authCard">
+          <h1>Drop and Give Me 50</h1>
+          <p>Sign in to start logging. The set is the whole workout.</p>
+          <form
+            action={async () => {
+              "use server";
+              await signIn("google");
+            }}
           >
-            Sign in with Google
-          </button>
-        </form>
+            <button type="submit" className="signInButton">
+              Sign in with Google
+            </button>
+          </form>
+        </div>
       </main>
     );
   }
 
   const caller = await createCaller();
-  const variationList = await caller.variations.list();
+  const variationList = (await caller.variations.list()).map((row) => ({
+    id: row.id,
+    name: row.name,
+    family: row.family,
+    intensityFactor: row.intensityFactor,
+    difficulty: row.difficulty,
+    primaryEmphasis: row.primaryEmphasis,
+    sortOrder: row.sortOrder,
+  }));
 
   return (
-    <main
-      style={{
-        minHeight: "100dvh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        padding: "2rem",
-        gap: "2rem",
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "24rem",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <span style={{ opacity: 0.6 }}>{session.user.name}</span>
+    <main className="appShell">
+      <div className="appHeader">
+        <span>{session.user.name}</span>
         <form
           action={async () => {
             "use server";
             await signOut();
           }}
         >
-          <button type="submit" style={{ opacity: 0.6, cursor: "pointer", background: "none", border: "none", color: "inherit" }}>
+          <button type="submit" className="signOutButton">
             Sign out
           </button>
         </form>
       </div>
-
-      <LogForm variations={variationList} />
+      <LogScreen
+        variations={variationList}
+        armedReps={armedReps}
+        source={source}
+      />
     </main>
   );
 }

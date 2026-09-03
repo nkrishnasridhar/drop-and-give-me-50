@@ -2,12 +2,12 @@ import { createTRPCClient, httpBatchLink } from "@trpc/client";
 import type { AppRouter } from "@/server/api/root";
 
 /**
- * A vanilla tRPC client for the one client component that needs to call a
- * mutation directly (the Log form). React Query bindings are deferred to
- * Phase 2 — that's when they earn their place, as the foundation for the
- * IndexedDB outbox and optimistic UI (docs/architecture.md §1), not
- * before. This client has no cache; every call hits the network.
+ * Vanilla tRPC client used by the Query provider. Mutations that have
+ * to survive a closed tab go through `postLogSet` instead, so the
+ * service worker can call the same HTTP endpoint without React.
  */
-export const trpcClient = createTRPCClient<AppRouter>({
-  links: [httpBatchLink({ url: "/api/trpc" })],
-});
+export function createBrowserTRPCClient() {
+  return createTRPCClient<AppRouter>({
+    links: [httpBatchLink({ url: "/api/trpc" })],
+  });
+}
