@@ -38,6 +38,12 @@ async function flush(): Promise<void> {
   }));
 
   const result = await drainOutboxItems(payloads, postLogSet);
+  if (result.dropped.length > 0) {
+    console.warn(
+      "Dropped outbox sets the server rejected as un-saveable",
+      result.dropped,
+    );
+  }
   await removeOutboxIds([...result.synced, ...result.dropped]);
 }
 

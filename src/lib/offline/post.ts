@@ -4,11 +4,35 @@ import {
 } from "@/domain/outbox";
 import type { LogSetPayload } from "@/domain/set";
 
-interface TrpcErrorBody {
-  error?: {
-    data?: { code?: string };
-    message?: string;
-  };
+/**
+ * tRPC v11's default transformer is identity, so a mutation body is the
+ * raw input — not `{ json: input }`. Wrapping it makes Zod see `{ json }`
+ * as the procedure input, returns BAD_REQUEST, and the outbox drops the
+ * set (optimistic total flashes, then snaps back to the server snapshot).
+ */
+export function serializeLogSetBody(payload: LogSetPayload): string {
+  return JSON.stringify(payload);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+/**
+ * Reads `error.data.code` from a tRPC HTTP error envelope, including the
+ * `{ error: { json: { data } } }` wrapper some transformers add.
+ */
+export function readTrpcErrorCode(body: unknown): string | undefined {
+  if (!isRecord(body) || !isRecord(body.error)) return undefined;
+
+  const error = isRecord(body.error.json) ? body.error.json : body.error;
+  if (!isRecord(error.data)) return undefined;
+
+  return typeof error.data.code === "string" ? error.data.code : undefined;
+}
+
+function hasTrpcError(body: unknown): boolean {
+  return isRecord(body) && isRecord(body.error);
 }
 
 /**
@@ -23,7 +47,7 @@ export async function postLogSet(payload: LogSetPayload): Promise<void> {
       method: "POST",
       credentials: "include",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ json: payload }),
+      body: serializeLogSetBody(payload),
     });
   } catch (error) {
     throw new OutboxPostError(
@@ -32,10 +56,10 @@ export async function postLogSet(payload: LogSetPayload): Promise<void> {
     );
   }
 
-  const body = (await response.json().catch(() => null)) as TrpcErrorBody | null;
-  const trpcCode = body?.error?.data?.code;
+  const body: unknown = await response.json().catch(() => null);
+  const trpcCode = readTrpcErrorCode(body);
 
-  if (!response.ok || body?.error) {
+  if (!response.ok || hasTrpcError(body)) {
     throw classifyHttpDrainFailure(response.status, trpcCode);
   }
 }
