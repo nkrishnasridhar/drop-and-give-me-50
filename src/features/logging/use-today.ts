@@ -4,14 +4,17 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { computeLocalDate } from "@/domain/date";
 import {
-  addDayCounts,
+  nextTodayFloor,
   pendingDayCount,
-  raiseTodayFloor,
   visibleTodayTotals,
   type DayCount,
 } from "@/domain/today-totals";
-import type { OutboxRow } from "@/lib/offline/db";
-import { listOutbox } from "@/lib/offline/db";
+import type { OutboxRow, PersistedTodayFloor } from "@/lib/offline/db";
+import {
+  listOutbox,
+  readTodayFloor,
+  writeTodayFloor,
+} from "@/lib/offline/db";
 import { drainOutbox, subscribeToOutbox } from "@/lib/offline/sync";
 import { useTRPC } from "@/lib/trpc";
 
@@ -31,15 +34,34 @@ export function useIsClient(): boolean {
   return useSyncExternalStore(subscribeNoop, () => true, () => false);
 }
 
-export function useOutbox(): OutboxRow[] {
-  const [items, setItems] = useState<OutboxRow[]>([]);
+let memoryOutbox: OutboxRow[] = [];
+let memoryFloor: PersistedTodayFloor | null = null;
+let memoryHydrated = false;
+
+function useOutboxState() {
+  const [items, setItems] = useState<OutboxRow[]>(memoryOutbox);
+  const [restoredFloor, setRestoredFloor] =
+    useState<PersistedTodayFloor | null>(memoryFloor);
+  const [hydrated, setHydrated] = useState(memoryHydrated);
 
   useEffect(() => {
     let cancelled = false;
+    let initial = !memoryHydrated;
+    let pullGeneration = 0;
 
     async function pull() {
-      const rows = await listOutbox();
-      if (!cancelled) setItems(rows);
+      const generation = ++pullGeneration;
+      const [rows, saved] = await Promise.all([listOutbox(), readTodayFloor()]);
+      if (cancelled || generation !== pullGeneration) return;
+      memoryOutbox = rows;
+      setItems(rows);
+      if (initial) {
+        initial = false;
+        memoryFloor = saved;
+        memoryHydrated = true;
+        setRestoredFloor(saved);
+        setHydrated(true);
+      }
     }
 
     void pull();
@@ -54,7 +76,11 @@ export function useOutbox(): OutboxRow[] {
     };
   }, []);
 
-  return items;
+  return { items, restoredFloor, hydrated };
+}
+
+export function useOutbox(): OutboxRow[] {
+  return useOutboxState().items;
 }
 
 export function useTodayTotals() {
@@ -62,48 +88,91 @@ export function useTodayTotals() {
   const queryClient = useQueryClient();
   const tz = useTimeZone();
   const isClient = useIsClient();
-  const outbox = useOutbox();
+  const { items: outbox, restoredFloor, hydrated } = useOutboxState();
   const todayQuery = useQuery({
     ...trpc.days.today.queryOptions({ tz }),
     enabled: isClient,
+    refetchOnReconnect: false,
+    placeholderData: (previousData) => previousData,
   });
 
   const localDate =
     todayQuery.data?.localDate ?? computeLocalDate(new Date(), tz);
   const pending = outbox.filter((row) => row.localDate === localDate);
-  const server: DayCount = {
-    totalReps: todayQuery.data?.totalReps ?? 0,
-    setCount: todayQuery.data?.setCount ?? 0,
-  };
+  const server: DayCount | null = todayQuery.data
+    ? {
+        totalReps: todayQuery.data.totalReps,
+        setCount: todayQuery.data.setCount,
+      }
+    : null;
   const pendingTotals = pendingDayCount(pending);
-  const combined = addDayCounts(server, pendingTotals);
 
-  const [floor, setFloor] = useState<(DayCount & { localDate: string }) | null>(
-    null,
-  );
+  const [overlay, setOverlay] = useState<{
+    floor: PersistedTodayFloor | null;
+    previousPending: DayCount | null;
+  }>({ floor: memoryFloor, previousPending: null });
   const previousPendingCount = useRef(0);
   const snapshotUpdatedAt = useRef<number | null>(null);
 
-  const floorForDate = floor?.localDate === localDate ? floor : null;
-  const nextFloor =
-    pending.length > 0
-      ? { ...raiseTodayFloor(floorForDate, combined), localDate }
-      : floorForDate;
-  if (
-    nextFloor?.totalReps !== floor?.totalReps ||
-    nextFloor?.setCount !== floor?.setCount ||
-    nextFloor?.localDate !== floor?.localDate
-  ) {
-    setFloor(nextFloor);
+  const seededFloor = overlay.floor ?? (hydrated ? restoredFloor : null);
+  const floorForDate =
+    seededFloor?.localDate === localDate ? seededFloor : null;
+  const hydration = hydrated && overlay.previousPending === null;
+  const nextFloorCount = nextTodayFloor({
+    floor: floorForDate,
+    server,
+    previousPending: overlay.previousPending ?? {
+      totalReps: 0,
+      setCount: 0,
+    },
+    pending: pendingTotals,
+    hydration,
+  });
+  const nextFloor: PersistedTodayFloor | null = nextFloorCount
+    ? { ...nextFloorCount, localDate }
+    : floorForDate;
+  const nextPreviousPending = hydrated ? pendingTotals : overlay.previousPending;
+  const overlayChanged =
+    nextFloor?.totalReps !== overlay.floor?.totalReps ||
+    nextFloor?.setCount !== overlay.floor?.setCount ||
+    nextFloor?.localDate !== overlay.floor?.localDate ||
+    nextPreviousPending?.totalReps !== overlay.previousPending?.totalReps ||
+    nextPreviousPending?.setCount !== overlay.previousPending?.setCount ||
+    (nextPreviousPending === null) !== (overlay.previousPending === null);
+
+  if (overlayChanged) {
+    setOverlay({
+      floor: nextFloor,
+      previousPending: nextPreviousPending,
+    });
   }
 
   const visible = visibleTodayTotals(server, pendingTotals, nextFloor);
 
-  // Refetch only after the outbox shrinks (a drain), never when a set is
-  // first queued — that in-flight GET can still see 0 and overwrite the
-  // cache after the POST has already succeeded.
   useEffect(() => {
-    if (pending.length < previousPendingCount.current) {
+    if (!hydrated) return;
+    // First paint after IDB restore still has React floor=null. Writing
+    // that would wipe the persisted 165/10 and bring back the 60/3 flash.
+    if (overlay.floor === null && restoredFloor && pending.length > 0) return;
+    memoryFloor = overlay.floor;
+    void writeTodayFloor(overlay.floor);
+  }, [overlay.floor, hydrated, pending.length, restoredFloor]);
+
+  // A reconnect GET that lands mid-drain writes a snapshot that already
+  // includes some queued sets. Cancel it while anything is waiting.
+  useEffect(() => {
+    if (pending.length === 0) return;
+    void queryClient.cancelQueries(trpc.days.today.queryFilter({ tz }));
+  }, [pending.length, queryClient, trpc, tz]);
+
+  // Refetch only after the outbox empties, never when a set is first
+  // queued and never on reconnect — that in-flight GET can still see a
+  // partial drain and overlap the overlay.
+  useEffect(() => {
+    if (
+      pending.length === 0 &&
+      previousPendingCount.current > 0
+    ) {
       snapshotUpdatedAt.current = todayQuery.dataUpdatedAt;
       const filter = trpc.days.today.queryFilter({ tz });
       void queryClient.cancelQueries(filter).then(() => {
@@ -123,7 +192,9 @@ export function useTodayTotals() {
       return;
     }
     snapshotUpdatedAt.current = null;
-    setFloor(null);
+    setOverlay((current) =>
+      current.floor === null ? current : { ...current, floor: null },
+    );
   }, [pending.length, todayQuery.dataUpdatedAt, todayQuery.isFetching]);
 
   return {

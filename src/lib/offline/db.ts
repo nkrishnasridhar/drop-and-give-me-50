@@ -1,6 +1,7 @@
 import Dexie, { type EntityTable } from "dexie";
 import type { PersistedClient, Persister } from "@tanstack/react-query-persist-client";
 import type { LogSetPayload } from "@/domain/set";
+import type { DayCount } from "@/domain/today-totals";
 
 export interface OutboxRow extends LogSetPayload {
   localDate: string;
@@ -73,6 +74,36 @@ export async function removeOutboxIds(ids: readonly string[]): Promise<void> {
 const RECENT_REPS_KEY = "recentReps";
 const LAST_VARIATION_KEY = "lastVariationId";
 const LAST_COUNTER_KEY = "lastCounter";
+const TODAY_FLOOR_KEY = "todayFloor";
+
+export type PersistedTodayFloor = DayCount & { localDate: string };
+
+function isPersistedTodayFloor(value: unknown): value is PersistedTodayFloor {
+  if (typeof value !== "object" || value === null) return false;
+  const record = value as Record<string, unknown>;
+  return (
+    typeof record.totalReps === "number" &&
+    typeof record.setCount === "number" &&
+    typeof record.localDate === "string"
+  );
+}
+
+export async function readTodayFloor(): Promise<PersistedTodayFloor | null> {
+  if (!db) return null;
+  const value = (await db.prefs.get(TODAY_FLOOR_KEY))?.value;
+  return isPersistedTodayFloor(value) ? value : null;
+}
+
+export async function writeTodayFloor(
+  floor: PersistedTodayFloor | null,
+): Promise<void> {
+  if (!db) return;
+  if (!floor) {
+    await db.prefs.delete(TODAY_FLOOR_KEY);
+    return;
+  }
+  await db.prefs.put({ key: TODAY_FLOOR_KEY, value: floor });
+}
 
 export async function recordLocalLog(
   reps: number,
