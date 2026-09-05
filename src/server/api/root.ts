@@ -1,10 +1,12 @@
 import { daysRouter } from "@/server/api/routers/days";
+import { restRouter } from "@/server/api/routers/rest";
 import { setsRouter } from "@/server/api/routers/sets";
 import { variationsRouter } from "@/server/api/routers/variations";
 import { createTRPCContext, router } from "@/server/api/trpc";
 
 export const appRouter = router({
   days: daysRouter,
+  rest: restRouter,
   sets: setsRouter,
   variations: variationsRouter,
 });

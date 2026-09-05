@@ -6,8 +6,10 @@ import { useMemo, useState } from "react";
 import { learnPresets } from "@/domain/presets";
 import type { ClientSetSource } from "@/domain/set";
 import { useLogSet } from "@/features/logging/use-log-set";
+import { useRestDay } from "@/features/logging/use-rest-day";
 import { useTodayTotals } from "@/features/logging/use-today";
 import { VariationSheet } from "@/features/logging/variation-sheet";
+import { WeekRing } from "@/features/logging/week-ring";
 import type { VariationOption } from "@/features/logging/types";
 import {
   readLastCounter,
@@ -29,6 +31,7 @@ export function LogScreen({
   source = "app",
 }: LogScreenProps) {
   const { logSet } = useLogSet();
+  const rest = useRestDay();
   const today = useTodayTotals();
   const trpc = useTRPC();
   useQuery(trpc.variations.list.queryOptions());
@@ -116,6 +119,7 @@ export function LogScreen({
         </p>
         <p className={styles.todayMeta}>
           {today.setCount} set{today.setCount === 1 ? "" : "s"}
+          {today.dailyRepGoal > 0 ? ` · daily ${today.dailyRepGoal}` : ""}
         </p>
         {today.isSyncing && (
           <p className={styles.syncing}>
@@ -123,6 +127,23 @@ export function LogScreen({
           </p>
         )}
       </div>
+
+      <WeekRing
+        activeDays={today.ring.activeDays}
+        targetDays={today.ring.targetDays}
+        completedDates={today.ring.completedDates}
+        weekStart={today.ring.weekStart}
+        today={today.localDate}
+      />
+
+      <button
+        type="button"
+        className={today.isRestDay ? styles.restOn : styles.restOff}
+        disabled={rest.isPending}
+        onClick={() => rest.toggle(today.localDate, today.isRestDay)}
+      >
+        {today.isRestDay ? "Rest day · counts toward the week" : "Mark today as rest"}
+      </button>
 
       <div className={styles.variationRow}>
         <button

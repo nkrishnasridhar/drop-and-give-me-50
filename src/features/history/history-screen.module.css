@@ -1,0 +1,339 @@
+.screen {
+  width: 100%;
+  max-width: 26rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+}
+
+.streak {
+  text-align: center;
+}
+
+.streakValue {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.streakMeta {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.heatmapSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.heatmapWrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 0.2rem;
+}
+
+.heatmapMonth,
+.heatmapWeekday {
+  fill: var(--muted);
+  font-size: 9px;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+.heatCell {
+  cursor: pointer;
+  outline: none;
+}
+
+.heatSelected {
+  cursor: pointer;
+  stroke: var(--foreground);
+  stroke-width: 1.5;
+  outline: none;
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.28rem;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.legendSwatch {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.35rem;
+}
+
+.dayGroup,
+.dayGroupSelected {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.dayGroupSelected {
+  outline: 1px solid var(--border);
+  outline-offset: 0.55rem;
+  border-radius: 0.8rem;
+}
+
+.dayHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.dayTitle {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.dayMeta {
+  margin: 0.2rem 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.restOff,
+.restOn {
+  appearance: none;
+  flex-shrink: 0;
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.restOff {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+}
+
+.restOn {
+  border: 1px solid var(--heat-rest);
+  background: var(--heat-rest);
+  color: var(--foreground);
+}
+
+.setRow {
+  width: 100%;
+  display: flex;
+  align-items: baseline;
+  gap: 0.85rem;
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  padding: 0.7rem 0.1rem;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+
+.setReps {
+  font-size: 1.35rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  min-width: 2.4rem;
+}
+
+.setBody {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 0.1rem;
+}
+
+.setName {
+  font-size: 0.95rem;
+}
+
+.setMeta {
+  color: var(--muted);
+  font-size: 0.8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.empty,
+.emptyDay {
+  margin: 0;
+  color: var(--muted);
+  text-align: center;
+  font-size: 0.92rem;
+}
+
+.emptyDay {
+  text-align: left;
+  padding: 0.35rem 0 0.6rem;
+}
+
+.loadMore {
+  appearance: none;
+  align-self: center;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--foreground);
+  border-radius: 999px;
+  padding: 0.55rem 1rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.sheetRoot {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.sheetBackdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(0, 0, 0, 0.55);
+  cursor: pointer;
+}
+
+.sheet {
+  position: relative;
+  width: min(100%, 32rem);
+  max-height: min(86dvh, 40rem);
+  overflow: auto;
+  background: var(--surface);
+  border-top-left-radius: 1.5rem;
+  border-top-right-radius: 1.5rem;
+  padding: 0.75rem 1.1rem calc(1.25rem + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.sheetHandle {
+  width: 2.5rem;
+  height: 0.3rem;
+  border-radius: 999px;
+  background: var(--border);
+  margin: 0.2rem auto 0;
+}
+
+.sheetTitle {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.variationChip,
+.noteInput,
+.saveButton,
+.deleteButton,
+.deleteConfirm {
+  font: inherit;
+}
+
+.variationChip {
+  appearance: none;
+  align-self: flex-start;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--foreground);
+  border-radius: 999px;
+  padding: 0.55rem 0.95rem;
+  cursor: pointer;
+}
+
+.editStepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.editStepper button {
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--foreground);
+  font-size: 1.75rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.editStepper button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.editReps {
+  margin: 0;
+  min-width: 3.5rem;
+  text-align: center;
+  font-size: 2.4rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.noteInput {
+  width: 100%;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--foreground);
+  border-radius: 0.9rem;
+  padding: 0.75rem 0.9rem;
+}
+
+.saveButton,
+.deleteButton,
+.deleteConfirm {
+  appearance: none;
+  width: 100%;
+  min-height: 3.1rem;
+  border-radius: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.saveButton {
+  border: 0;
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.deleteButton {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+}
+
+.deleteConfirm {
+  border: 0;
+  background: var(--danger);
+  color: #140808;
+}
+
+.error {
+  margin: 0;
+  color: var(--danger);
+  text-align: center;
+}

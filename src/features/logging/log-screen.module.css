@@ -40,6 +40,82 @@
   color: var(--accent);
 }
 
+.ringBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.ringSvg {
+  display: block;
+}
+
+.ringValue {
+  fill: var(--foreground);
+  font-size: 1.35rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+.ringDots {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.ringDot,
+.ringDotFilled,
+.ringDotFuture {
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  font-weight: 650;
+}
+
+.ringDot {
+  background: var(--surface-2);
+  color: var(--muted);
+}
+
+.ringDotFilled {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.ringDotFuture {
+  background: transparent;
+  color: var(--border);
+  border: 1px dashed var(--border);
+}
+
+.restOff,
+.restOn {
+  appearance: none;
+  align-self: center;
+  border-radius: 999px;
+  padding: 0.5rem 0.95rem;
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.restOff {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+}
+
+.restOn {
+  border: 1px solid var(--heat-rest);
+  background: var(--heat-rest);
+  color: var(--foreground);
+}
+
 .variationRow {
   display: flex;
   justify-content: center;
@@ -165,6 +241,10 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
+}
+
+.sheetRootNested {
+  z-index: 50;
 }
 
 .sheetBackdrop {

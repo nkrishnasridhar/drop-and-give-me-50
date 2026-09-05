@@ -187,8 +187,7 @@ export const pushSets = pgTable(
 
 // ---------------------------------------------------------------------------
 // Domain: rest_days — an explicitly logged rest day satisfies the weekly
-// target (docs/decisions.md #4). No endpoint touches this table until
-// Phase 3; it's created now because it's part of the Phase 1 schema.
+// target (docs/decisions.md #4). Toggled via rest.mark / rest.unmark.
 // ---------------------------------------------------------------------------
 
 export const restDays = pgTable(

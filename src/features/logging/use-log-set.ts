@@ -6,11 +6,14 @@ import type { ClientSetSource } from "@/domain/set";
 import { enqueueOutbox, recordLocalLog } from "@/lib/offline/db";
 import { confirmHaptic } from "@/lib/offline/haptics";
 import { drainOutbox, requestBackgroundSync } from "@/lib/offline/sync";
+import { invalidateHistoryViews } from "@/lib/invalidate-memory";
 import { generateUuidV7 } from "@/lib/uuid";
+import { useTRPC } from "@/lib/trpc";
 import { useTimeZone } from "@/features/logging/use-today";
 
 export function useLogSet() {
   const queryClient = useQueryClient();
+  const trpc = useTRPC();
   const tz = useTimeZone();
 
   async function logSet(input: {
@@ -33,6 +36,7 @@ export function useLogSet() {
     });
     await recordLocalLog(input.reps, input.variationId);
     await queryClient.invalidateQueries({ queryKey: ["local"] });
+    invalidateHistoryViews(queryClient, trpc);
     confirmHaptic();
     void requestBackgroundSync();
     void drainOutbox();

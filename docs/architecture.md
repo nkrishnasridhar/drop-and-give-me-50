@@ -194,12 +194,13 @@ Feature folders over type folders because almost every future change is
 scoped to one feature, and the blast radius of that change should be one
 directory, not four.
 
-**Currently present (through Phase 2):** Phase 1's schema, auth, and tRPC
-spine, plus the Log screen in `src/features/logging/`, the IndexedDB
-outbox in `src/lib/offline/`, TanStack Query persistence, a Serwist
-service worker (`src/app/sw.ts`) with an `/offline` fallback, and a web
-app manifest with Log 20 / Log 50 shortcuts. History, stats, settings,
-and the 7-day ring are not present yet — they belong to later phases.
+**Currently present (through Phase 3):** Phase 1's schema, auth, and tRPC
+spine; the Log screen in `src/features/logging/` with the 7-day week ring
+and a rest-day toggle; History in `src/features/history/` (heatmap, grouped
+edit/delete, week-streak); the IndexedDB outbox in `src/lib/offline/`;
+TanStack Query persistence; a Serwist service worker (`src/app/sw.ts`) with
+an `/offline` fallback; and a web app manifest with Log 20 / Log 50
+shortcuts. Stats, settings UI, onboarding, and push belong to later phases.
 
 ## 6. Environment and configuration
 
@@ -250,9 +251,12 @@ Log 20 / Log 50 shortcuts. Playwright's airplane-mode end-to-end test is
 deferred to Phase 6, where the portfolio pass owns it; Phase 2 covers
 the drain path with unit tests in `src/domain/outbox.test.ts`.
 
-**Phase 3 — Memory (week 3).** Heatmap, 7-day ring, grouped history with
-edit/delete, rest days, week-streak computation. Success: the app gets
-opened to be looked at, not only to log.
+**Phase 3 — Memory (week 3). Implementation complete.** Heatmap, 7-day
+ring, grouped history with edit/delete, rest days, week-streak
+computation. Success: the app gets opened to be looked at, not only to
+log. Settings UI, the stats screen, onboarding, and push remain later
+phases — `weeklyTargetDays` / `dailyRepGoal` are read from `user_settings`
+inside `days.today`, without a settings router.
 
 **Phase 4 — Stats and health (week 4).** Full stats screen, load
 calculation, the three educational cards, onboarding, disclaimer. Success:

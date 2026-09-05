@@ -2,13 +2,14 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { computeLocalDate } from "@/domain/date";
+import { computeLocalDate, startOfWeekMonday } from "@/domain/date";
 import {
   nextTodayFloor,
   pendingDayCount,
   visibleTodayTotals,
   type DayCount,
 } from "@/domain/today-totals";
+import { withPendingToday } from "@/domain/streak";
 import type { OutboxRow, PersistedTodayFloor } from "@/lib/offline/db";
 import {
   listOutbox,
@@ -148,6 +149,21 @@ export function useTodayTotals() {
   }
 
   const visible = visibleTodayTotals(server, pendingTotals, nextFloor);
+  const weekStart =
+    todayQuery.data?.ring?.weekStart ?? startOfWeekMonday(localDate);
+  const targetDays = todayQuery.data?.ring?.targetDays ?? 5;
+  const todayComplete =
+    visible.setCount > 0 ||
+    (todayQuery.data?.isRestDay ?? false) ||
+    pending.length > 0;
+  const completedDates = withPendingToday(
+    todayQuery.data?.ring?.completedDates ?? [],
+    localDate,
+    todayComplete,
+  );
+  const activeDays = completedDates.filter(
+    (date) => date >= weekStart && date <= localDate,
+  ).length;
 
   useEffect(() => {
     if (!hydrated) return;
@@ -204,5 +220,13 @@ export function useTodayTotals() {
     setCount: visible.setCount,
     pendingCount: outbox.length,
     isSyncing: outbox.length > 0,
+    isRestDay: todayQuery.data?.isRestDay ?? false,
+    dailyRepGoal: todayQuery.data?.dailyRepGoal ?? 50,
+    ring: {
+      weekStart,
+      activeDays,
+      targetDays,
+      completedDates,
+    },
   };
 }

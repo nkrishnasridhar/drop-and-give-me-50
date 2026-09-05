@@ -13,6 +13,12 @@
   --accent: #ff5a1f;
   --accent-text: #140800;
   --danger: #f87171;
+  --heat-0: #161616;
+  --heat-1: #3a1c12;
+  --heat-2: #6b2a14;
+  --heat-3: #c2410c;
+  --heat-4: #ff5a1f;
+  --heat-rest: #3f5344;
   color-scheme: dark;
 }
 
@@ -55,6 +61,10 @@ select {
   padding: calc(1.1rem + env(safe-area-inset-top)) 1.25rem
     calc(1.5rem + env(safe-area-inset-bottom));
   gap: 1.5rem;
+}
+
+.appShellWithTabs {
+  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
 }
 
 .appHeader {

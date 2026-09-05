@@ -31,3 +31,59 @@ export function computeLocalDate(
     day: "2-digit",
   }).format(adjusted);
 }
+
+export const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+function pad2(value: number): string {
+  return String(value).padStart(2, "0");
+}
+
+/**
+ * Civil-date arithmetic on already-local `YYYY-MM-DD` strings. These are
+ * not instants — `local_date` was frozen at write time — so UTC methods
+ * are just a calendar, not a timezone conversion.
+ */
+export function addDays(isoDate: string, days: number): string {
+  const [year, month, day] = isoDate.split("-").map(Number);
+  const utc = new Date(Date.UTC(year, month - 1, day + days));
+  return `${utc.getUTCFullYear()}-${pad2(utc.getUTCMonth() + 1)}-${pad2(utc.getUTCDate())}`;
+}
+
+/** Monday = 0 … Sunday = 6, matching the weekly reset. */
+export function weekdayMonday0(isoDate: string): number {
+  const [year, month, day] = isoDate.split("-").map(Number);
+  const sunday0 = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
+  return (sunday0 + 6) % 7;
+}
+
+export function startOfWeekMonday(isoDate: string): string {
+  return addDays(isoDate, -weekdayMonday0(isoDate));
+}
+
+export function enumerateDates(from: string, to: string): string[] {
+  if (from > to) return [];
+  const dates: string[] = [];
+  for (let cursor = from; cursor <= to; cursor = addDays(cursor, 1)) {
+    dates.push(cursor);
+  }
+  return dates;
+}
+
+export function compareIsoDates(a: string, b: string): number {
+  if (a < b) return -1;
+  if (a > b) return 1;
+  return 0;
+}
+
+/** Inclusive civil-date window bound for heatmap / streak reads. */
+export const MAX_STATS_RANGE_DAYS = 400;
+
+export function formatCivilDay(isoDate: string): string {
+  const [year, month, day] = isoDate.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day)).toLocaleDateString("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+  });
+}

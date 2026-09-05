@@ -13,10 +13,9 @@ deliberate choice, not a limitation.
 
 ## Status
 
-**Phase 2 — Delight and offline.** The Log screen is the product: one-tap
-presets, a stepper, a variation sheet, haptics, and writes that hit
-IndexedDB before the network. Installable as a PWA with "Log 20" / "Log 50"
-shortcuts. History, stats, and reminders arrive in later phases — see
+**Phase 3 — Memory.** Heatmap, 7-day ring, rest days, grouped history
+with edit/delete, and a derived week-streak. Stats, settings, onboarding,
+and reminders arrive in later phases — see
 [docs/architecture.md §8](./docs/architecture.md#8-development-phases).
 
 ## Stack

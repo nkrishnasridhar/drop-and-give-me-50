@@ -14,6 +14,7 @@ interface VariationSheetProps {
   selectedId: string;
   onSelect: (id: string) => void;
   onClose: () => void;
+  nested?: boolean;
 }
 
 export function VariationSheet({
@@ -22,6 +23,7 @@ export function VariationSheet({
   selectedId,
   onSelect,
   onClose,
+  nested = false,
 }: VariationSheetProps) {
   if (!open) return null;
 
@@ -31,7 +33,7 @@ export function VariationSheet({
   })).filter((group) => group.items.length > 0);
 
   return (
-    <div className={styles.sheetRoot}>
+    <div className={nested ? `${styles.sheetRoot} ${styles.sheetRootNested}` : styles.sheetRoot}>
       <button
         type="button"
         className={styles.sheetBackdrop}
