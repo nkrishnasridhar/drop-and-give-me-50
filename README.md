@@ -13,9 +13,10 @@ deliberate choice, not a limitation.
 
 ## Status
 
-**Phase 3 — Memory.** Heatmap, 7-day ring, rest days, grouped history
-with edit/delete, and a derived week-streak. Stats, settings, onboarding,
-and reminders arrive in later phases — see
+**Phase 4 — Stats and health.** Lifetime stats, week-streak, load vs a
+28-day baseline, three educational cards with visible thresholds,
+onboarding, and the health disclaimer in Settings. Reminders arrive in
+Phase 5 — see
 [docs/architecture.md §8](./docs/architecture.md#8-development-phases).
 
 ## Stack
@@ -75,6 +76,7 @@ Open [http://localhost:3000](http://localhost:3000).
 | `npm run db:push` | Push the schema directly (fast local iteration only) |
 | `npm run db:studio` | Open Drizzle Studio against `DATABASE_URL` |
 | `npm run db:seed` | Seed/update the 22 push-up variations |
+| `npm run db:seed:ramp` | Optional: seed a 28-day binge fixture so the ramp card fires (`RAMP_SEED_USER_ID`) |
 
 ## CI
 

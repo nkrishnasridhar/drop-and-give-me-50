@@ -3,6 +3,7 @@ import {
   addDays,
   enumerateDates,
   formatCivilDay,
+  hourInZone,
   startOfWeekMonday,
   weekdayMonday0,
 } from "./date";
@@ -33,5 +34,11 @@ describe("civil date helpers", () => {
   it("formats a stored civil date without timezone conversion", () => {
     expect(formatCivilDay("2024-06-12")).toContain("12");
     expect(formatCivilDay("2024-06-12")).toContain("Jun");
+  });
+
+  it("reads the wall-clock hour in a named zone", () => {
+    const noonUtc = new Date("2024-01-15T12:00:00Z");
+    expect(hourInZone(noonUtc, "UTC")).toBe(12);
+    expect(hourInZone(noonUtc, "Pacific/Auckland")).toBe(1); // NZDT UTC+13
   });
 });

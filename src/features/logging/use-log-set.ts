@@ -9,12 +9,14 @@ import { drainOutbox, requestBackgroundSync } from "@/lib/offline/sync";
 import { invalidateHistoryViews } from "@/lib/invalidate-memory";
 import { generateUuidV7 } from "@/lib/uuid";
 import { useTRPC } from "@/lib/trpc";
+import { useSettings } from "@/features/settings/use-settings";
 import { useTimeZone } from "@/features/logging/use-today";
 
 export function useLogSet() {
   const queryClient = useQueryClient();
   const trpc = useTRPC();
   const tz = useTimeZone();
+  const settings = useSettings();
 
   async function logSet(input: {
     variationId: string;
@@ -31,13 +33,17 @@ export function useLogSet() {
       tz,
       note: input.note,
       source: input.source,
-      localDate: computeLocalDate(occurredAt, tz),
+      localDate: computeLocalDate(
+        occurredAt,
+        tz,
+        settings.dayStartOffsetMinutes,
+      ),
       queuedAt: Date.now(),
     });
     await recordLocalLog(input.reps, input.variationId);
     await queryClient.invalidateQueries({ queryKey: ["local"] });
     invalidateHistoryViews(queryClient, trpc);
-    confirmHaptic();
+    confirmHaptic(settings.hapticsEnabled);
     void requestBackgroundSync();
     void drainOutbox();
   }

@@ -96,9 +96,19 @@ export function useTodayTotals() {
     refetchOnReconnect: false,
     placeholderData: (previousData) => previousData,
   });
+  const settingsQuery = useQuery({
+    ...trpc.settings.get.queryOptions(),
+    enabled: isClient,
+    placeholderData: (previous) => previous,
+  });
 
   const localDate =
-    todayQuery.data?.localDate ?? computeLocalDate(new Date(), tz);
+    todayQuery.data?.localDate ??
+    computeLocalDate(
+      new Date(),
+      tz,
+      settingsQuery.data?.dayStartOffsetMinutes ?? 0,
+    );
   const pending = outbox.filter((row) => row.localDate === localDate);
   const server: DayCount | null = todayQuery.data
     ? {

@@ -4,12 +4,14 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { HistoryScreen } from "@/features/history/history-screen";
 import { LogScreen } from "@/features/logging/log-screen";
+import { SettingsScreen } from "@/features/settings/settings-screen";
 import { TabBar, type AppTab } from "@/features/shell/tab-bar";
+import { StatsScreen } from "@/features/stats/stats-screen";
 import { useTRPC } from "@/lib/trpc";
 
 /**
  * Precached fallback for document navigations when the network is gone.
- * Variations, history, and today's totals come from the Dexie-backed
+ * Variations, history, stats, and today's totals come from the Dexie-backed
  * TanStack Query cache populated during the last online visit.
  */
 export default function OfflinePage() {
@@ -32,6 +34,10 @@ export default function OfflinePage() {
     <main className="appShell appShellWithTabs">
       {tab === "history" ? (
         <HistoryScreen variations={variationsQuery.data} />
+      ) : tab === "stats" ? (
+        <StatsScreen />
+      ) : tab === "settings" ? (
+        <SettingsScreen />
       ) : (
         <LogScreen variations={variationsQuery.data} />
       )}

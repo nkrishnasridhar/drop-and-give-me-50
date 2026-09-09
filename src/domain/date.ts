@@ -87,3 +87,14 @@ export function formatCivilDay(isoDate: string): string {
     timeZone: "UTC",
   });
 }
+
+/** Wall-clock hour 0–23 in `timeZone` for an instant. */
+export function hourInZone(occurredAt: Date, timeZone: string): number {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone,
+    hour: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(occurredAt);
+  const hour = parts.find((part) => part.type === "hour")?.value;
+  return Number.parseInt(hour ?? "0", 10);
+}

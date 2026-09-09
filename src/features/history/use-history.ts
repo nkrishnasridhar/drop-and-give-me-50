@@ -30,8 +30,18 @@ export function useHistoryData() {
     enabled: isClient,
     placeholderData: (previous) => previous,
   });
+  const settingsQuery = useQuery({
+    ...trpc.settings.get.queryOptions(),
+    enabled: isClient,
+    placeholderData: (previous) => previous,
+  });
   const today =
-    todayQuery.data?.localDate ?? computeLocalDate(new Date(), tz);
+    todayQuery.data?.localDate ??
+    computeLocalDate(
+      new Date(),
+      tz,
+      settingsQuery.data?.dayStartOffsetMinutes ?? 0,
+    );
   const from = addDays(today, -(MAX_STATS_RANGE_DAYS - 1));
   const rangeQuery = useQuery({
     ...trpc.days.range.queryOptions({ from, to: today }),

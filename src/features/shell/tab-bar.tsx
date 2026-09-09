@@ -4,12 +4,21 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import styles from "./tab-bar.module.css";
 
-export type AppTab = "log" | "history";
+export type AppTab = "log" | "history" | "stats" | "settings";
 
 const TABS: { id: AppTab; href: string; label: string }[] = [
   { id: "log", href: "/", label: "Log" },
   { id: "history", href: "/history", label: "History" },
+  { id: "stats", href: "/stats", label: "Stats" },
+  { id: "settings", href: "/settings", label: "Settings" },
 ];
+
+function tabFromPath(pathname: string): AppTab {
+  if (pathname.startsWith("/history")) return "history";
+  if (pathname.startsWith("/stats")) return "stats";
+  if (pathname.startsWith("/settings")) return "settings";
+  return "log";
+}
 
 export function TabBar({
   active,
@@ -19,8 +28,7 @@ export function TabBar({
   onSelect?: (tab: AppTab) => void;
 }) {
   const pathname = usePathname();
-  const current: AppTab =
-    active ?? (pathname.startsWith("/history") ? "history" : "log");
+  const current: AppTab = active ?? tabFromPath(pathname);
 
   return (
     <nav className={styles.bar} aria-label="App">

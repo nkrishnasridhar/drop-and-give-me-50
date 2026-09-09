@@ -171,7 +171,7 @@ ID.
 - `stats.load` — rolling 7-day load, 28-day baseline, ratio, and which
   educational card (if any) is triggered
 - `variations.list`
-- `settings.get`, `settings.update`
+- `settings.get`, `settings.update`, `settings.completeOnboarding`
 - `push.subscribe`, `push.unsubscribe`, `push.sendTest`
 - `sync.pull` — everything changed since a cursor, including tombstones
 
@@ -194,13 +194,14 @@ Feature folders over type folders because almost every future change is
 scoped to one feature, and the blast radius of that change should be one
 directory, not four.
 
-**Currently present (through Phase 3):** Phase 1's schema, auth, and tRPC
-spine; the Log screen in `src/features/logging/` with the 7-day week ring
-and a rest-day toggle; History in `src/features/history/` (heatmap, grouped
-edit/delete, week-streak); the IndexedDB outbox in `src/lib/offline/`;
-TanStack Query persistence; a Serwist service worker (`src/app/sw.ts`) with
-an `/offline` fallback; and a web app manifest with Log 20 / Log 50
-shortcuts. Stats, settings UI, onboarding, and push belong to later phases.
+**Currently present (through Phase 4):** Phase 1's schema, auth, and tRPC
+spine; the Log screen with the 7-day week ring and rest-day toggle;
+History (heatmap, grouped edit/delete, week-streak); Stats (lifetime,
+PRs, consistency rate, load, educational cards); Settings; 3-card
+onboarding with the health disclaimer; the IndexedDB outbox; TanStack
+Query persistence; a Serwist service worker with an `/offline` fallback;
+and a web app manifest with Log 20 / Log 50 shortcuts. Push reminders
+belong to Phase 5.
 
 ## 6. Environment and configuration
 
@@ -258,9 +259,11 @@ log. Settings UI, the stats screen, onboarding, and push remain later
 phases — `weeklyTargetDays` / `dailyRepGoal` are read from `user_settings`
 inside `days.today`, without a settings router.
 
-**Phase 4 — Stats and health (week 4).** Full stats screen, load
-calculation, the three educational cards, onboarding, disclaimer. Success:
-the ramp card fires correctly against seeded synthetic data.
+**Phase 4 — Stats and health (week 4). Implementation complete.** Full
+stats screen, load calculation, the three educational cards, onboarding,
+disclaimer. Success: the ramp card fires correctly against seeded
+synthetic data (`src/domain/load.test.ts`, optional `npm run db:seed:ramp`).
+Push reminders remain Phase 5.
 
 **Phase 5 — Nudges (week 5).** VAPID keys, subscription management, Vercel
 Cron, one daily reminder respecting local time, in-app PR/milestone

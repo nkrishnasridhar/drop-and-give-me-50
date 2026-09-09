@@ -1,0 +1,64 @@
+.screen {
+  width: 100%;
+  max-width: 26rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  flex: 1;
+  justify-content: center;
+}
+
+.progress {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.7rem;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.body {
+  margin: 0;
+  color: var(--muted);
+  font-size: 1.02rem;
+  line-height: 1.5;
+}
+
+.actions {
+  display: flex;
+  gap: 0.65rem;
+  margin-top: 0.5rem;
+}
+
+.primary,
+.secondary {
+  appearance: none;
+  flex: 1;
+  border: 0;
+  border-radius: 1.1rem;
+  min-height: 3.4rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primary {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.secondary {
+  background: transparent;
+  color: var(--foreground);
+  border: 1px solid var(--border);
+}
+
+.error {
+  margin: 0;
+  color: var(--danger);
+}

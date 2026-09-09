@@ -3,7 +3,8 @@
  * on purpose — a missing buzz must never block a log
  * (docs/architecture.md §1).
  */
-export function confirmHaptic(): void {
+export function confirmHaptic(enabled = true): void {
+  if (!enabled) return;
   if (typeof navigator === "undefined" || typeof navigator.vibrate !== "function") {
     return;
   }

@@ -16,6 +16,7 @@ export function invalidateHistoryViews(
   void queryClient.invalidateQueries(trpc.days.range.pathFilter());
   void queryClient.invalidateQueries(trpc.sets.list.pathFilter());
   void queryClient.invalidateQueries(trpc.sets.list.infiniteQueryFilter());
+  void queryClient.invalidateQueries(trpc.stats.pathFilter());
 }
 
 /**
