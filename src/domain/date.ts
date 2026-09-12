@@ -88,13 +88,35 @@ export function formatCivilDay(isoDate: string): string {
   });
 }
 
+function zoneParts(
+  occurredAt: Date,
+  timeZone: string,
+  options: Intl.DateTimeFormatOptions,
+): Intl.DateTimeFormatPart[] {
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone,
+    hourCycle: "h23",
+    ...options,
+  }).formatToParts(occurredAt);
+}
+
+function partNumber(
+  parts: Intl.DateTimeFormatPart[],
+  type: Intl.DateTimeFormatPartTypes,
+): number {
+  return Number.parseInt(parts.find((part) => part.type === type)?.value ?? "0", 10);
+}
+
 /** Wall-clock hour 0–23 in `timeZone` for an instant. */
 export function hourInZone(occurredAt: Date, timeZone: string): number {
-  const parts = new Intl.DateTimeFormat("en-GB", {
-    timeZone,
+  return partNumber(zoneParts(occurredAt, timeZone, { hour: "2-digit" }), "hour");
+}
+
+/** Wall-clock minutes from local midnight in `timeZone` (0–1439). */
+export function minutesInZone(occurredAt: Date, timeZone: string): number {
+  const parts = zoneParts(occurredAt, timeZone, {
     hour: "2-digit",
-    hourCycle: "h23",
-  }).formatToParts(occurredAt);
-  const hour = parts.find((part) => part.type === "hour")?.value;
-  return Number.parseInt(hour ?? "0", 10);
+    minute: "2-digit",
+  });
+  return partNumber(parts, "hour") * 60 + partNumber(parts, "minute");
 }

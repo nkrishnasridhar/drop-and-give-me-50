@@ -9,6 +9,9 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: import.meta.dirname ?? path.resolve("."),
   },
+  // web-push speaks the VAPID protocol over Node https; keep it out of
+  // the bundle so those Node APIs stay intact (docs/architecture.md §1).
+  serverExternalPackages: ["web-push"],
 };
 
 export default withSerwist(nextConfig);

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { env, requireEnv } from "./env";
+import { env, optionalEnv, requireEnv } from "./env";
 
 describe("requireEnv", () => {
   it("returns the value when the environment variable is set", () => {
@@ -35,5 +35,18 @@ describe("env.DATABASE_URL", () => {
     delete process.env.DATABASE_URL;
 
     expect(() => env.DATABASE_URL).toThrow(/DATABASE_URL/);
+  });
+});
+
+describe("optionalEnv", () => {
+  it("returns undefined when unset", () => {
+    delete process.env.OPTIONAL_TEST_VAR;
+    expect(optionalEnv("OPTIONAL_TEST_VAR")).toBeUndefined();
+  });
+
+  it("returns the value when set", () => {
+    vi.stubEnv("OPTIONAL_TEST_VAR", "here");
+    expect(optionalEnv("OPTIONAL_TEST_VAR")).toBe("here");
+    vi.unstubAllEnvs();
   });
 });

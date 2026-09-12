@@ -3,6 +3,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { DISCLAIMER_TEXT } from "@/domain/disclaimer";
+import { DEFAULT_REMINDER_TIME } from "@/domain/reminder";
+import { useTimeZone } from "@/features/logging/use-today";
+import { usePushActions, pushSupported } from "@/features/settings/use-push";
 import { useSettings } from "@/features/settings/use-settings";
 import { useTRPC } from "@/lib/trpc";
 import styles from "./settings-screen.module.css";
@@ -19,6 +22,8 @@ export function SettingsScreen() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const settings = useSettings();
+  const tz = useTimeZone();
+  const push = usePushActions();
   const [disclaimerOpen, setDisclaimerOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,6 +39,8 @@ export function SettingsScreen() {
     }),
   );
 
+  const busy = update.isPending || settings.isLoading || push.isPending;
+
   async function save(
     patch: Parameters<typeof update.mutateAsync>[0],
   ): Promise<void> {
@@ -47,6 +54,29 @@ export function SettingsScreen() {
     }
   }
 
+  async function toggleReminder(enabled: boolean): Promise<void> {
+    setError(null);
+    try {
+      if (enabled) {
+        await push.enable(tz);
+        await update.mutateAsync({
+          reminderEnabled: true,
+          reminderTime: settings.reminderTime || DEFAULT_REMINDER_TIME,
+          tz,
+        });
+      } else {
+        await update.mutateAsync({ reminderEnabled: false, tz });
+        await push.disable();
+      }
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Could not update reminders.",
+      );
+    }
+  }
+
   return (
     <div className={styles.screen}>
       <h1 className={styles.title}>Settings</h1>
@@ -55,7 +85,7 @@ export function SettingsScreen() {
         <span>Weekly target</span>
         <select
           value={settings.weeklyTargetDays}
-          disabled={update.isPending || settings.isLoading}
+          disabled={busy}
           onChange={(event) =>
             void save({ weeklyTargetDays: Number(event.target.value) })
           }
@@ -76,7 +106,7 @@ export function SettingsScreen() {
           max={500}
           defaultValue={settings.dailyRepGoal}
           key={settings.dailyRepGoal}
-          disabled={update.isPending || settings.isLoading}
+          disabled={busy}
           onBlur={(event) => {
             const next = Number.parseInt(event.target.value, 10);
             if (!Number.isInteger(next) || next < 1 || next > 500) {
@@ -92,7 +122,7 @@ export function SettingsScreen() {
         <span>Day starts at</span>
         <select
           value={settings.dayStartOffsetMinutes}
-          disabled={update.isPending || settings.isLoading}
+          disabled={busy}
           onChange={(event) =>
             void save({
               dayStartOffsetMinutes: Number(event.target.value) as
@@ -117,12 +147,69 @@ export function SettingsScreen() {
         <input
           type="checkbox"
           checked={settings.hapticsEnabled}
-          disabled={update.isPending || settings.isLoading}
+          disabled={busy}
           onChange={(event) =>
             void save({ hapticsEnabled: event.target.checked })
           }
         />
       </label>
+
+      <label className={styles.toggle}>
+        <span>Daily reminder</span>
+        <input
+          type="checkbox"
+          checked={settings.reminderEnabled}
+          disabled={busy || !pushSupported()}
+          onChange={(event) => void toggleReminder(event.target.checked)}
+        />
+      </label>
+
+      <label className={styles.field}>
+        <span>Reminder time</span>
+        <input
+          type="time"
+          step={900}
+          value={settings.reminderTime}
+          disabled={busy}
+          onChange={(event) => {
+            const next = event.target.value;
+            if (next && next !== settings.reminderTime) {
+              void save({ reminderTime: next, tz });
+            }
+          }}
+        />
+      </label>
+      <p className={styles.hint}>
+        At most one nudge a day, in this device&apos;s timezone. Skipped if
+        you already logged or rested. A test counts as today&apos;s send.
+      </p>
+
+      {settings.reminderEnabled && (
+        <button
+          type="button"
+          className={styles.linkish}
+          disabled={busy}
+          onClick={() => {
+            setError(null);
+            void push.sendTest().catch((caught: unknown) => {
+              setError(
+                caught instanceof Error
+                  ? caught.message
+                  : "Could not send a test notification.",
+              );
+            });
+          }}
+        >
+          Send a test notification
+        </button>
+      )}
+
+      {!pushSupported() && (
+        <p className={styles.hint}>
+          This browser cannot receive web push. Android Chrome can, after
+          install.
+        </p>
+      )}
 
       <button
         type="button"

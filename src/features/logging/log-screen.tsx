@@ -2,12 +2,14 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "motion/react";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
+import { selectLogToast, type LogToast } from "@/domain/nudge";
 import { learnPresets } from "@/domain/presets";
 import type { ClientSetSource } from "@/domain/set";
+import { NudgeToast } from "@/features/logging/nudge-toast";
 import { useLogSet } from "@/features/logging/use-log-set";
 import { useRestDay } from "@/features/logging/use-rest-day";
-import { useTodayTotals } from "@/features/logging/use-today";
+import { useIsClient, useTodayTotals } from "@/features/logging/use-today";
 import { VariationSheet } from "@/features/logging/variation-sheet";
 import { WeekRing } from "@/features/logging/week-ring";
 import type { VariationOption } from "@/features/logging/types";
@@ -34,7 +36,13 @@ export function LogScreen({
   const rest = useRestDay();
   const today = useTodayTotals();
   const trpc = useTRPC();
+  const isClient = useIsClient();
   useQuery(trpc.variations.list.queryOptions());
+  const overview = useQuery({
+    ...trpc.stats.overview.queryOptions({ tz: today.tz }),
+    enabled: isClient,
+    placeholderData: (previous) => previous,
+  });
   const [pickedVariationId, setPickedVariationId] = useState<string | null>(
     null,
   );
@@ -45,6 +53,8 @@ export function LogScreen({
   const [note, setNote] = useState("");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [toast, setToast] = useState<LogToast | null>(null);
+  const clearToast = useCallback(() => setToast(null), []);
 
   const lastVariationQuery = useQuery({
     queryKey: ["local", "lastVariationId"],
@@ -86,6 +96,17 @@ export function LogScreen({
 
     setError(null);
     try {
+      const nextToast = selectLogToast({
+        reps: nextReps,
+        previousTodayReps: today.totalReps,
+        dailyRepGoal: today.dailyRepGoal,
+        previousWeekActive: today.ring.activeDays,
+        weeklyTargetDays: today.ring.targetDays,
+        todayAlreadyComplete: today.ring.completedDates.includes(today.localDate),
+        previousBiggestSet: overview.data?.biggestSetReps ?? null,
+        previousBiggestDay: overview.data?.biggestDay?.totalReps ?? null,
+        previousLifetimeReps: overview.data?.lifetimeReps ?? null,
+      });
       await logSet({
         variationId,
         reps: nextReps,
@@ -95,6 +116,7 @@ export function LogScreen({
       setCounterOverride(nextReps);
       setNote("");
       setNoteOpen(false);
+      setToast(nextToast);
     } catch (caught) {
       setError(
         caught instanceof Error ? caught.message : "Could not save that set.",
@@ -104,6 +126,7 @@ export function LogScreen({
 
   return (
     <div className={styles.screen}>
+      <NudgeToast toast={toast} onClear={clearToast} />
       <div className={styles.today}>
         <p className={styles.todayLabel}>Today</p>
         <p className={styles.todayTotal}>

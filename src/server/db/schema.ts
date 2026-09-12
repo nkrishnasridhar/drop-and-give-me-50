@@ -260,8 +260,8 @@ export const userSettings = pgTable("user_setting", {
 });
 
 // ---------------------------------------------------------------------------
-// Domain: push_subscriptions — no endpoint touches this until Phase 5, but
-// it's part of the Phase 1 schema per docs/architecture.md §3.
+// Domain: push_subscriptions — Web Push endpoints (Phase 5). `last_success_at`
+// is both endpoint health and the daily-cap clock (docs/decisions.md #13).
 // ---------------------------------------------------------------------------
 
 export const pushSubscriptions = pgTable("push_subscription", {

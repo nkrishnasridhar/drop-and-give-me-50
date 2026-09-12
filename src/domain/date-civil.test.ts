@@ -4,6 +4,7 @@ import {
   enumerateDates,
   formatCivilDay,
   hourInZone,
+  minutesInZone,
   startOfWeekMonday,
   weekdayMonday0,
 } from "./date";
@@ -40,5 +41,7 @@ describe("civil date helpers", () => {
     const noonUtc = new Date("2024-01-15T12:00:00Z");
     expect(hourInZone(noonUtc, "UTC")).toBe(12);
     expect(hourInZone(noonUtc, "Pacific/Auckland")).toBe(1); // NZDT UTC+13
+    expect(minutesInZone(noonUtc, "UTC")).toBe(12 * 60);
+    expect(minutesInZone(noonUtc, "Pacific/Auckland")).toBe(60);
   });
 });

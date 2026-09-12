@@ -17,6 +17,10 @@ env:
   AUTH_SECRET: ci-placeholder-secret-not-for-real-use
   AUTH_GOOGLE_ID: ci-placeholder-google-id
   AUTH_GOOGLE_SECRET: ci-placeholder-google-secret
+  VAPID_PUBLIC_KEY: ci-placeholder-vapid-public
+  VAPID_PRIVATE_KEY: ci-placeholder-vapid-private
+  VAPID_SUBJECT: mailto:ci@example.com
+  CRON_SECRET: ci-placeholder-cron-secret
 
 jobs:
   ci:

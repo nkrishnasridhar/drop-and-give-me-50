@@ -1,8 +1,17 @@
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { DEFAULT_REMINDER_TIME, normalizeReminderTime } from "@/domain/reminder";
 import { protectedProcedure, router } from "@/server/api/trpc";
 import { userSettings } from "@/server/db/schema";
+
+const reminderTimeSchema = z
+  .string()
+  .min(4)
+  .max(8)
+  .refine((value) => normalizeReminderTime(value) !== null, {
+    message: "Reminder time must be HH:MM.",
+  });
 
 export const settingsRouter = router({
   get: protectedProcedure.query(async ({ ctx }) => {
@@ -12,6 +21,9 @@ export const settingsRouter = router({
         dailyRepGoal: userSettings.dailyRepGoal,
         dayStartOffsetMinutes: userSettings.dayStartOffsetMinutes,
         hapticsEnabled: userSettings.hapticsEnabled,
+        reminderEnabled: userSettings.reminderEnabled,
+        reminderTime: userSettings.reminderTime,
+        tz: userSettings.tz,
         onboardedAt: userSettings.onboardedAt,
         disclaimerAcceptedAt: userSettings.disclaimerAcceptedAt,
       })
@@ -23,6 +35,9 @@ export const settingsRouter = router({
       dailyRepGoal: row?.dailyRepGoal ?? 50,
       dayStartOffsetMinutes: row?.dayStartOffsetMinutes ?? 0,
       hapticsEnabled: row?.hapticsEnabled ?? true,
+      reminderEnabled: row?.reminderEnabled ?? false,
+      reminderTime: normalizeReminderTime(row?.reminderTime) ?? DEFAULT_REMINDER_TIME,
+      tz: row?.tz ?? "UTC",
       onboardedAt: row?.onboardedAt?.toISOString() ?? null,
       disclaimerAcceptedAt: row?.disclaimerAcceptedAt?.toISOString() ?? null,
     };
@@ -44,18 +59,27 @@ export const settingsRouter = router({
             ])
             .optional(),
           hapticsEnabled: z.boolean().optional(),
+          reminderEnabled: z.boolean().optional(),
+          reminderTime: reminderTimeSchema.optional(),
+          tz: z.string().min(1).max(100).optional(),
         })
         .refine(
           (value) =>
             value.weeklyTargetDays !== undefined ||
             value.dailyRepGoal !== undefined ||
             value.dayStartOffsetMinutes !== undefined ||
-            value.hapticsEnabled !== undefined,
+            value.hapticsEnabled !== undefined ||
+            value.reminderEnabled !== undefined ||
+            value.reminderTime !== undefined ||
+            value.tz !== undefined,
           { message: "At least one setting is required." },
         ),
     )
     .mutation(async ({ ctx, input }) => {
       const now = new Date();
+      const reminderTime = input.reminderTime
+        ? normalizeReminderTime(input.reminderTime)
+        : undefined;
       await ctx.db
         .insert(userSettings)
         .values({
@@ -64,6 +88,9 @@ export const settingsRouter = router({
           dailyRepGoal: input.dailyRepGoal ?? 50,
           dayStartOffsetMinutes: input.dayStartOffsetMinutes ?? 0,
           hapticsEnabled: input.hapticsEnabled ?? true,
+          reminderEnabled: input.reminderEnabled ?? false,
+          reminderTime: reminderTime ?? DEFAULT_REMINDER_TIME,
+          tz: input.tz ?? "UTC",
           updatedAt: now,
         })
         .onConflictDoUpdate({
@@ -81,6 +108,11 @@ export const settingsRouter = router({
             ...(input.hapticsEnabled !== undefined
               ? { hapticsEnabled: input.hapticsEnabled }
               : {}),
+            ...(input.reminderEnabled !== undefined
+              ? { reminderEnabled: input.reminderEnabled }
+              : {}),
+            ...(reminderTime !== undefined ? { reminderTime } : {}),
+            ...(input.tz !== undefined ? { tz: input.tz } : {}),
             updatedAt: now,
           },
         });

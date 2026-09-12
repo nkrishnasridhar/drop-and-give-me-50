@@ -172,7 +172,7 @@ ID.
   educational card (if any) is triggered
 - `variations.list`
 - `settings.get`, `settings.update`, `settings.completeOnboarding`
-- `push.subscribe`, `push.unsubscribe`, `push.sendTest`
+- `push.subscribe`, `push.unsubscribe`, `push.sendTest`, `push.publicKey`
 - `sync.pull` — everything changed since a cursor, including tombstones
 
 ## 5. Folder structure
@@ -194,14 +194,16 @@ Feature folders over type folders because almost every future change is
 scoped to one feature, and the blast radius of that change should be one
 directory, not four.
 
-**Currently present (through Phase 4):** Phase 1's schema, auth, and tRPC
+**Currently present (through Phase 5):** Phase 1's schema, auth, and tRPC
 spine; the Log screen with the 7-day week ring and rest-day toggle;
 History (heatmap, grouped edit/delete, week-streak); Stats (lifetime,
 PRs, consistency rate, load, educational cards); Settings; 3-card
 onboarding with the health disclaimer; the IndexedDB outbox; TanStack
-Query persistence; a Serwist service worker with an `/offline` fallback;
-and a web app manifest with Log 20 / Log 50 shortcuts. Push reminders
-belong to Phase 5.
+Query persistence; a Serwist service worker with an `/offline` fallback
+and Web Push display; a web app manifest with Log 20 / Log 50 shortcuts;
+daily local-time reminders (Vercel Cron every 15 minutes, at most one
+per local day); and in-app PR/milestone toasts. Portfolio polish belongs
+to Phase 6.
 
 ## 6. Environment and configuration
 
@@ -212,7 +214,9 @@ belong to Phase 5.
 - `drizzle.config.ts` loads `.env.local` then `.env` itself via `dotenv`,
   since `drizzle-kit` runs as a standalone CLI outside Next.js and doesn't
   get Next's automatic env loading.
-- See `.env.example` for the current full list.
+- See `.env.example` for the current full list (`VAPID_*` and `CRON_SECRET`
+  are required only for Phase 5 push; the rest of the app still runs
+  without them).
 
 ## 7. CI and the migration-drift check
 
@@ -263,11 +267,12 @@ inside `days.today`, without a settings router.
 stats screen, load calculation, the three educational cards, onboarding,
 disclaimer. Success: the ramp card fires correctly against seeded
 synthetic data (`src/domain/load.test.ts`, optional `npm run db:seed:ramp`).
-Push reminders remain Phase 5.
 
-**Phase 5 — Nudges (week 5).** VAPID keys, subscription management, Vercel
-Cron, one daily reminder respecting local time, in-app PR/milestone
-toasts. Success: exactly one useful notification per day.
+**Phase 5 — Nudges (week 5). Implementation complete.** VAPID keys,
+subscription management, Vercel Cron every 15 minutes, one daily reminder
+respecting local time (skipped if the user already logged or rested),
+in-app PR/milestone toasts. Success: at most one useful notification per
+day (`src/domain/reminder.test.ts`). Portfolio polish remains Phase 6.
 
 **Phase 6 — Portfolio pass (week 6).** README with architecture diagram, a
 seeded demo mode, Lighthouse pass, the Playwright offline test, and a

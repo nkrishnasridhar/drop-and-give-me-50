@@ -13,10 +13,9 @@ deliberate choice, not a limitation.
 
 ## Status
 
-**Phase 4 — Stats and health.** Lifetime stats, week-streak, load vs a
-28-day baseline, three educational cards with visible thresholds,
-onboarding, and the health disclaimer in Settings. Reminders arrive in
-Phase 5 — see
+**Phase 5 — Nudges.** Daily local-time Web Push reminder (at most one per
+day), subscription management in Settings, and in-app PR/milestone toasts.
+The portfolio pass is Phase 6 — see
 [docs/architecture.md §8](./docs/architecture.md#8-development-phases).
 
 ## Stack
@@ -60,6 +59,14 @@ Open [http://localhost:3000](http://localhost:3000).
      `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET` locally, and into the
      Vercel project's environment variables for production (with the
      production redirect URI added in step 4).
+
+- `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT` — Web Push.
+  Generate with `npx web-push generate-vapid-keys`. `VAPID_SUBJECT` is a
+  `mailto:` or `https:` URL. Required for reminders; the rest of the app
+  runs without them.
+- `CRON_SECRET` — bearer token for `GET /api/cron/reminders`. Set the same
+  value in Vercel; Cron Jobs send `Authorization: Bearer $CRON_SECRET`.
+  `vercel.json` schedules that route every 15 minutes.
 
 ## Scripts
 

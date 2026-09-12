@@ -332,3 +332,21 @@
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
 }
+
+.toast {
+  position: fixed;
+  left: 1.25rem;
+  right: 1.25rem;
+  top: calc(0.7rem + env(safe-area-inset-top));
+  z-index: 45;
+  width: min(calc(100% - 2.5rem), 24rem);
+  max-width: 24rem;
+  margin: 0 auto;
+  padding: 0.8rem 1rem;
+  border-radius: 1rem;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-weight: 650;
+  text-align: center;
+  box-shadow: 0 10px 32px color-mix(in srgb, var(--accent) 35%, transparent);
+}
