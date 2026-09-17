@@ -2,14 +2,18 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
+    id: "/",
+    lang: "en",
     name: "Drop and Give Me 50",
     short_name: "Give Me 50",
     description: "A beautiful app for tracking push-ups.",
     start_url: "/",
+    scope: "/",
     display: "standalone",
     background_color: "#0a0a0a",
     theme_color: "#0a0a0a",
     orientation: "portrait",
+    categories: ["health", "fitness"],
     icons: [
       {
         src: "/icons/icon-192.png",

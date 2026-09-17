@@ -186,15 +186,17 @@ src/
   lib/            offline outbox, date handling, push — cross-feature utilities
   domain/         pure functions (streaks, load, records) — the direct unit
                   test target, kept free of framework/IO concerns
-docs/             this document, the PRD, and the locked decisions record
+docs/             this document, the PRD, the locked decisions record, and the case study
 drizzle/          generated SQL migrations + snapshot metadata (committed)
+e2e/              Playwright airplane-mode spec (Phase 6; not on GitHub Actions)
+scripts/          variation / demo / ramp seeds, Lighthouse runner
 ```
 
 Feature folders over type folders because almost every future change is
 scoped to one feature, and the blast radius of that change should be one
 directory, not four.
 
-**Currently present (through Phase 5):** Phase 1's schema, auth, and tRPC
+**Currently present (through Phase 6).** Phase 1's schema, auth, and tRPC
 spine; the Log screen with the 7-day week ring and rest-day toggle;
 History (heatmap, grouped edit/delete, week-streak); Stats (lifetime,
 PRs, consistency rate, load, educational cards); Settings; 3-card
@@ -202,8 +204,11 @@ onboarding with the health disclaimer; the IndexedDB outbox; TanStack
 Query persistence; a Serwist service worker with an `/offline` fallback
 and Web Push display; a web app manifest with Log 20 / Log 50 shortcuts;
 daily local-time reminders (Vercel Cron every 15 minutes, at most one
-per local day); and in-app PR/milestone toasts. Portfolio polish belongs
-to Phase 6.
+per local day); in-app PR/milestone toasts; a year-of-training seed
+(`npm run db:seed:demo`); the Playwright offline-sync spec
+(`npm run test:e2e`); and the Lighthouse + installability check
+(`npm run lighthouse`). The case study lives in
+[docs/case-study.md](./case-study.md).
 
 ## 6. Environment and configuration
 
@@ -214,9 +219,14 @@ to Phase 6.
 - `drizzle.config.ts` loads `.env.local` then `.env` itself via `dotenv`,
   since `drizzle-kit` runs as a standalone CLI outside Next.js and doesn't
   get Next's automatic env loading.
+- Auth.js `trustHost: true` (`src/server/auth/index.ts`) — required so
+  `next start` (Playwright, Lighthouse, local production) can read
+  sessions. Vercel already infers a trusted host; production Node without
+  it raises `UntrustedHost` and every request looks signed-out. This is
+  not a new provider or session strategy.
 - See `.env.example` for the current full list (`VAPID_*` and `CRON_SECRET`
-  are required only for Phase 5 push; the rest of the app still runs
-  without them).
+  are required only for Phase 5 push; `DEMO_SEED_USER_ID` / `RAMP_SEED_USER_ID`
+  are optional seed-script ids; the rest of the app still runs without them).
 
 ## 7. CI and the migration-drift check
 
@@ -232,6 +242,15 @@ present to construct its config object.
 `npm run db:push` remains available for fast local iteration against a
 scratch Neon branch during development; `db:generate` + `db:migrate` is
 the path actually used to apply changes to any shared/production database.
+
+Playwright (`npm run test:e2e`) and Lighthouse (`npm run lighthouse`) are
+intentionally not on this job. CI's `DATABASE_URL` is a placeholder that
+never connects, and the runner has no Chrome. The airplane-mode spec
+needs a real Neon database, a production service worker from `next start`,
+and a signed-in session cookie. Putting those on GitHub Actions would be
+a new CI architecture — Postgres, browser install, secrets — which §1
+does not include. Run them locally (or on demand) against the same Neon
+the app already uses.
 
 ## 8. Development phases
 
@@ -272,11 +291,21 @@ synthetic data (`src/domain/load.test.ts`, optional `npm run db:seed:ramp`).
 subscription management, Vercel Cron every 15 minutes, one daily reminder
 respecting local time (skipped if the user already logged or rested),
 in-app PR/milestone toasts. Success: at most one useful notification per
-day (`src/domain/reminder.test.ts`). Portfolio polish remains Phase 6.
+day (`src/domain/reminder.test.ts`).
 
-**Phase 6 — Portfolio pass (week 6).** README with architecture diagram, a
-seeded demo mode, Lighthouse pass, the Playwright offline test, and a
-written case study built around what was cut.
+**Phase 6 — Portfolio pass (week 6). Implementation complete.** README
+with architecture diagrams, a seeded demo year (`src/domain/demo-year.ts`,
+`npm run db:seed:demo`), Lighthouse against the production PWA shell
+(`npm run lighthouse`; Lighthouse 12+ no longer scores a PWA category, so
+the script asserts Chrome's installability surface — manifest, icons,
+service worker — beside the remaining category scores), the Playwright
+offline test (`e2e/offline-log.spec.ts`: install SW, go offline, log the
+three default presets, reconnect, assert outbox drain + Postgres rows),
+and the case study in [docs/case-study.md](./case-study.md). Demo data is
+a seed script against the same `push_sets` / `rest_days` tables as live
+use (`source: "backfill"`, `note: "demo-year"`), not a second API or a
+test-only auth provider. The e2e session is a row in `session` plus the
+Auth.js database-session cookie.
 
 **The gate:** no Version 2 feature (§4 in the PRD) is built until the user
 has logged on 30 separate days.

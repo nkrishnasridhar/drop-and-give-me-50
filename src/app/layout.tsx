@@ -15,7 +15,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Drop and Give Me 50",
-  description: "A beautiful app for tracking push-ups.",
+  description:
+    "Log a set of push-ups in one tap. Offline-first, installable, one exercise.",
   applicationName: "Drop and Give Me 50",
   appleWebApp: {
     capable: true,

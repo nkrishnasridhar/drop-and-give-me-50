@@ -15,12 +15,15 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "lighthouse": "tsx scripts/lighthouse.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx scripts/seed-variations.ts",
-    "db:seed:ramp": "tsx scripts/seed-ramp-scenario.ts"
+    "db:seed:ramp": "tsx scripts/seed-ramp-scenario.ts",
+    "db:seed:demo": "tsx scripts/seed-demo.ts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.3",
@@ -41,16 +44,19 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@serwist/turbopack": "^9.5.12",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/web-push": "^3.6.4",
+    "chrome-launcher": "^1.2.1",
     "dotenv": "^17.4.2",
     "drizzle-kit": "^0.31.10",
     "esbuild": "^0.28.2",
     "eslint": "^9",
     "eslint-config-next": "16.3.2",
+    "lighthouse": "^13.4.1",
     "serwist": "^9.5.12",
     "tsx": "^4.23.12",
     "typescript": "^5",

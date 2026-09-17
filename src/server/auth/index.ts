@@ -9,6 +9,12 @@ import { accounts, sessions, userSettings, users } from "@/server/db/schema";
  * other providers, no magic-link/email verification flow, hence no
  * `verificationTokensTable` passed to the adapter.
  *
+ * `trustHost` is required for Auth.js in `NODE_ENV=production` (`next start`,
+ * Playwright, Lighthouse). Vercel already infers a trusted host; local
+ * production does not, and UntrustedHost would make every session look
+ * signed-out — which made the Phase 6 airplane-mode spec impossible without
+ * this. It does not add a provider or change the session strategy.
+ *
  * Requires `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, and `AUTH_SECRET` — see
  * .env.example.
  */
@@ -19,6 +25,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     sessionsTable: sessions,
   }),
   session: { strategy: "database" },
+  trustHost: true,
   providers: [Google],
   events: {
     async createUser({ user }) {

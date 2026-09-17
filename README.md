@@ -8,15 +8,58 @@ deliberate choice, not a limitation.
   philosophy, rejected features
 - [docs/architecture.md](./docs/architecture.md) — stack, schema, API
   boundaries, folder structure, roadmap, risks
-- [docs/decisions.md](./docs/decisions.md) — decisions locked for the
-  duration of the build, with rationale
+- [docs/decisions.md](./decisions.md) — decisions locked for the duration
+  of the build, with rationale
+- [docs/case-study.md](./docs/case-study.md) — portfolio write-up, led by
+  what was cut
 
 ## Status
 
-**Phase 5 — Nudges.** Daily local-time Web Push reminder (at most one per
-day), subscription management in Settings, and in-app PR/milestone toasts.
-The portfolio pass is Phase 6 — see
+**Phase 6 — Portfolio pass.** README, a year of seeded demo data, a
+Lighthouse check against the production PWA shell, the Playwright
+offline-sync path, and the case study. No Version 2 feature is built
+until this user has logged on 30 separate days — see
 [docs/architecture.md §8](./docs/architecture.md#8-development-phases).
+
+## Architecture
+
+Writes hit IndexedDB first. The network is an afterthought. Rewards are
+never stored as their own source of truth.
+
+```mermaid
+flowchart LR
+  Tap[User taps preset] --> Local[Write to IndexedDB with client UUIDv7]
+  Local --> UI[UI updates optimistically]
+  Local --> Outbox[Append to outbox]
+  Outbox --> SW[Service worker / online listener]
+  SW --> API["tRPC sets.log (idempotent upsert on id)"]
+  API --> PG[(Postgres: insert push_set)]
+  PG --> Roll[Recompute that day's daily_stats from push_sets]
+```
+
+```mermaid
+flowchart TB
+  subgraph client [Browser]
+    Log[Log / History / Stats / Settings]
+    IDB[(IndexedDB outbox + query cache)]
+    SW[Serwist service worker]
+  end
+  subgraph vercel [One Next.js app on Vercel]
+    App[App Router]
+    tRPC[tRPC routers]
+    Cron[Cron: at most one reminder per local day]
+  end
+  Neon[(Neon Postgres via HTTP)]
+  Log --> IDB
+  IDB --> SW
+  SW --> tRPC
+  App --> tRPC
+  tRPC --> Neon
+  Cron --> Neon
+```
+
+Full schema, API list, and the decisions behind this shape:
+[docs/architecture.md](./docs/architecture.md).
 
 ## Stack
 
@@ -68,6 +111,15 @@ Open [http://localhost:3000](http://localhost:3000).
   value in Vercel; Cron Jobs send `Authorization: Bearer $CRON_SECRET`.
   `vercel.json` schedules that route every 15 minutes.
 
+Optional seed ids (the Auth.js `user.id` uuid from Neon):
+
+- `DEMO_SEED_USER_ID` — `npm run db:seed:demo` writes a year of synthetic
+  sets (`source: "backfill"`, `note: "demo-year"`) so History and Stats
+  are presentable. Skips if that note is already on the user. Today is
+  left empty so a live log still has somewhere to go.
+- `RAMP_SEED_USER_ID` — `npm run db:seed:ramp` writes the 28-day binge
+  fixture so the ramp card fires.
+
 ## Scripts
 
 | Script | Purpose |
@@ -78,12 +130,19 @@ Open [http://localhost:3000](http://localhost:3000).
 | `npm run lint` | ESLint |
 | `npm run typecheck` | Generate route types, then `tsc --noEmit` |
 | `npm run test` | Run the unit test suite (Vitest) |
+| `npm run test:e2e` | Playwright: install SW, go offline, log three sets, reconnect, verify Postgres |
+| `npm run lighthouse` | Lighthouse + PWA installability check against `next start` on port 4173 |
 | `npm run db:generate` | Generate a SQL migration from `src/server/db/schema.ts` |
 | `npm run db:migrate` | Apply generated migrations to `DATABASE_URL` |
 | `npm run db:push` | Push the schema directly (fast local iteration only) |
 | `npm run db:studio` | Open Drizzle Studio against `DATABASE_URL` |
 | `npm run db:seed` | Seed/update the 22 push-up variations |
-| `npm run db:seed:ramp` | Optional: seed a 28-day binge fixture so the ramp card fires (`RAMP_SEED_USER_ID`) |
+| `npm run db:seed:ramp` | Optional: seed a 28-day binge fixture (`RAMP_SEED_USER_ID`) |
+| `npm run db:seed:demo` | Optional: seed a year of training (`DEMO_SEED_USER_ID`) |
+
+`test:e2e` and `lighthouse` need a production build first (`npm run build`)
+and, for e2e, a real `DATABASE_URL` with variations seeded. E2E uses the
+machine's installed Chrome (`channel: "chrome"`).
 
 ## CI
 
@@ -91,3 +150,8 @@ Open [http://localhost:3000](http://localhost:3000).
 build, and a migration-drift check (fails if the schema changed without a
 committed, generated migration) on every push to `main` and every pull
 request.
+
+Playwright and Lighthouse stay off that job: CI has a placeholder
+`DATABASE_URL` and no Chrome. Adding Postgres plus a browser would be a
+different CI architecture than the one in
+[docs/architecture.md §1](./docs/architecture.md#1-stack-overview).

@@ -127,9 +127,12 @@ export function LogScreen({
   return (
     <div className={styles.screen}>
       <NudgeToast toast={toast} onClear={clearToast} />
-      <div className={styles.today}>
+      <div className={styles.today} aria-live="polite">
         <p className={styles.todayLabel}>Today</p>
-        <p className={styles.todayTotal}>
+        <p
+          className={styles.todayTotal}
+          aria-label={`${today.totalReps} reps today`}
+        >
           <motion.span
             key={today.totalReps}
             initial={{ y: 16, opacity: 0.35 }}
@@ -216,6 +219,7 @@ export function LogScreen({
             key={preset}
             type="button"
             className={styles.preset}
+            aria-label={`Quick log ${preset}`}
             disabled={!variationId}
             onClick={() => void commit(preset, source)}
           >
