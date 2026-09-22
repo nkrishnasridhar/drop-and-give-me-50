@@ -33,8 +33,11 @@ describe("civil date helpers", () => {
   });
 
   it("formats a stored civil date without timezone conversion", () => {
+    // en-GB short weekday + short month, e.g. "Wed, 12 Jun"
+    expect(formatCivilDay("2024-06-12")).toMatch(/Wed/);
     expect(formatCivilDay("2024-06-12")).toContain("12");
     expect(formatCivilDay("2024-06-12")).toContain("Jun");
+    expect(formatCivilDay("2024-06-12")).not.toMatch(/Wednesday/i);
   });
 
   it("reads the wall-clock hour in a named zone", () => {

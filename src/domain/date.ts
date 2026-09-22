@@ -81,7 +81,7 @@ export const MAX_STATS_RANGE_DAYS = 400;
 export function formatCivilDay(isoDate: string): string {
   const [year, month, day] = isoDate.split("-").map(Number);
   return new Date(Date.UTC(year, month - 1, day)).toLocaleDateString("en-GB", {
-    weekday: "long",
+    weekday: "short",
     day: "numeric",
     month: "short",
     timeZone: "UTC",
