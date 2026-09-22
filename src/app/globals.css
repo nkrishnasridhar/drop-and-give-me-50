@@ -22,23 +22,36 @@
   color-scheme: dark;
 }
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 html,
 body {
-  height: 100%;
-  max-width: 100vw;
-  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+  max-width: 100%;
+}
+
+/*
+ * One scroll container only. `overflow-x: hidden` on both html and body
+ * makes browsers compute overflow-y to auto on each, which doubles the
+ * vertical scrollbar; default body margin + height: 100% made it worse.
+ */
+html {
+  overflow-x: clip;
 }
 
 body {
+  min-height: 100dvh;
+  overflow-x: clip;
   color: var(--foreground);
   background: var(--background);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-* {
-  box-sizing: border-box;
 }
 
 a {
