@@ -1,8 +1,14 @@
 import { computeLocalDate, minutesInZone } from "@/domain/date";
 
-/** Cron is every 15 minutes (docs/architecture.md §1). */
+/**
+ * Reminder times snap to this grid in the UI. Delivery is driven by
+ * Vercel Cron: Hobby only allows once-per-day expressions, so
+ * `vercel.json` registers 24 daily jobs (one per UTC hour) against the
+ * same `/api/cron/reminders` path — hourly coverage without a Pro plan.
+ * On Pro, a single every-15-minutes schedule is enough.
+ */
 export const REMINDER_CRON_MINUTES = 15;
-/** Last slot that a 15-minute cron can still hit before local midnight. */
+/** Last slot on the 15-minute grid before local midnight. */
 export const LATEST_REMINDER_MINUTES = 23 * 60 + 45;
 export const DEFAULT_REMINDER_TIME = "18:00";
 
@@ -28,7 +34,7 @@ function pad2(value: number): string {
   return String(value).padStart(2, "0");
 }
 
-/** Snap to the 15-minute cron grid so a 23:50 reminder is not skipped. */
+/** Snap to the 15-minute grid so a 23:50 reminder is not skipped. */
 export function snapReminderMinutes(minutes: number): number {
   const clamped = Math.max(0, Math.min(LATEST_REMINDER_MINUTES, minutes));
   return Math.floor(clamped / REMINDER_CRON_MINUTES) * REMINDER_CRON_MINUTES;

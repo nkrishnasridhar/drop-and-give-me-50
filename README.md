@@ -109,7 +109,8 @@ Open [http://localhost:3000](http://localhost:3000).
   runs without them.
 - `CRON_SECRET` — bearer token for `GET /api/cron/reminders`. Set the same
   value in Vercel; Cron Jobs send `Authorization: Bearer $CRON_SECRET`.
-  `vercel.json` schedules that route every 15 minutes.
+  Hobby only allows once-per-day cron expressions, so `vercel.json` uses
+  24 daily jobs (one per UTC hour) on that route instead of `*/15 * * * *`.
 
 Optional seed ids (the Auth.js `user.id` uuid from Neon):
 

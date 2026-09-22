@@ -35,7 +35,7 @@ describe("reminderTimeToMinutes", () => {
 });
 
 describe("snapReminderMinutes", () => {
-  it("snaps down onto the 15-minute cron grid", () => {
+  it("snaps down onto the 15-minute reminder grid", () => {
     expect(snapReminderMinutes(18 * 60 + 7)).toBe(18 * 60);
     expect(formatReminderTime(23 * 60 + 50)).toBe("23:45");
   });
