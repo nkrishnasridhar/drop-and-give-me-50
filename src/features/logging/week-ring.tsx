@@ -1,12 +1,21 @@
 import { addDays } from "@/domain/date";
+import { weekDotKind } from "@/domain/streak";
 import styles from "./log-screen.module.css";
 
 const WEEKDAY_DOTS = ["M", "T", "W", "T", "F", "S", "S"];
+
+const DOT_CLASS: Record<ReturnType<typeof weekDotKind>, string> = {
+  rest: styles.ringDotRest,
+  filled: styles.ringDotFilled,
+  future: styles.ringDotFuture,
+  empty: styles.ringDot,
+};
 
 interface WeekRingProps {
   activeDays: number;
   targetDays: number;
   completedDates: readonly string[];
+  restDates: readonly string[];
   weekStart: string;
   today: string;
 }
@@ -15,6 +24,7 @@ export function WeekRing({
   activeDays,
   targetDays,
   completedDates,
+  restDates,
   weekStart,
   today,
 }: WeekRingProps) {
@@ -24,7 +34,6 @@ export function WeekRing({
   const circumference = 2 * Math.PI * radius;
   const progress = Math.min(1, activeDays / Math.max(1, targetDays));
   const offset = circumference * (1 - progress);
-  const completed = new Set(completedDates);
 
   return (
     <div className={styles.ringBlock}>
@@ -69,19 +78,14 @@ export function WeekRing({
       <div className={styles.ringDots} aria-hidden="true">
         {WEEKDAY_DOTS.map((label, index) => {
           const date = addDays(weekStart, index);
-          const future = date > today;
-          const filled = !future && completed.has(date);
+          const kind = weekDotKind({
+            date,
+            today,
+            completedDates,
+            restDates,
+          });
           return (
-            <span
-              key={date}
-              className={
-                filled
-                  ? styles.ringDotFilled
-                  : future
-                    ? styles.ringDotFuture
-                    : styles.ringDot
-              }
-            >
+            <span key={date} className={DOT_CLASS[kind]}>
               {label}
             </span>
           );

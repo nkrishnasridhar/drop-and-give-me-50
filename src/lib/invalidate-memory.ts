@@ -88,6 +88,14 @@ export function patchRestDay(
       completedDates = completedDates.filter((date) => date !== input.localDate);
     }
 
+    let restDates = today.ring.restDates ?? [];
+    const wasRest = restDates.includes(input.localDate);
+    if (input.isRestDay && !wasRest) {
+      restDates = [...restDates, input.localDate];
+    } else if (!input.isRestDay && wasRest) {
+      restDates = restDates.filter((date) => date !== input.localDate);
+    }
+
     return {
       ...today,
       isRestDay:
@@ -95,6 +103,7 @@ export function patchRestDay(
       ring: {
         ...today.ring,
         completedDates,
+        restDates,
         activeDays: completedDates.length,
       },
     };

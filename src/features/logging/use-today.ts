@@ -171,6 +171,11 @@ export function useTodayTotals() {
     localDate,
     todayComplete,
   );
+  const restDates = withPendingToday(
+    todayQuery.data?.ring?.restDates ?? [],
+    localDate,
+    todayQuery.data?.isRestDay ?? false,
+  );
   const activeDays = completedDates.filter(
     (date) => date >= weekStart && date <= localDate,
   ).length;
@@ -237,6 +242,7 @@ export function useTodayTotals() {
       activeDays,
       targetDays,
       completedDates,
+      restDates,
     },
   };
 }

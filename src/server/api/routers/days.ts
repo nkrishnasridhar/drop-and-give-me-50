@@ -70,6 +70,9 @@ export const daysRouter = router({
       const completedDates = weekDates.filter((date) =>
         isCompletedDay(byDate.get(date)),
       );
+      const restDates = weekDates.filter(
+        (date) => byDate.get(date)?.isRestDay === true,
+      );
 
       return {
         localDate,
@@ -83,6 +86,7 @@ export const daysRouter = router({
           activeDays: countCompletedDays(byDate, weekDates),
           targetDays: settings.weeklyTargetDays,
           completedDates,
+          restDates,
         },
       };
     }),

@@ -158,6 +158,7 @@ export function LogScreen({
         activeDays={today.ring.activeDays}
         targetDays={today.ring.targetDays}
         completedDates={today.ring.completedDates}
+        restDates={today.ring.restDates}
         weekStart={today.ring.weekStart}
         today={today.localDate}
       />

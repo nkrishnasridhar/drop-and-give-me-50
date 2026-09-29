@@ -124,3 +124,18 @@ export function withPendingToday(
   }
   return [...completedDates, today];
 }
+
+export type WeekDotKind = "rest" | "filled" | "future" | "empty";
+
+/** Log week-ring dot style: rest days share History's green, not the accent fill. */
+export function weekDotKind(input: {
+  date: string;
+  today: string;
+  completedDates: readonly string[];
+  restDates: readonly string[];
+}): WeekDotKind {
+  if (input.date > input.today) return "future";
+  if (input.restDates.includes(input.date)) return "rest";
+  if (input.completedDates.includes(input.date)) return "filled";
+  return "empty";
+}

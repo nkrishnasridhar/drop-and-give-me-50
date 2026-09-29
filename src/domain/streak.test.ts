@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { addDays, enumerateDates, startOfWeekMonday } from "./date";
-import { computeWeekStreak, withPendingToday, type DayStatus } from "./streak";
+import {
+  computeWeekStreak,
+  weekDotKind,
+  withPendingToday,
+  type DayStatus,
+} from "./streak";
 
 function trained(localDate: string): DayStatus {
   return {
@@ -140,5 +145,50 @@ describe("withPendingToday", () => {
     expect(withPendingToday(["2024-06-10"], "2024-06-12", false)).toEqual([
       "2024-06-10",
     ]);
+  });
+});
+
+describe("weekDotKind", () => {
+  const today = "2024-06-11"; // Tuesday
+  const monday = "2024-06-10";
+  const tuesday = "2024-06-11";
+  const wednesday = "2024-06-12";
+
+  it("styles rest dates green even when they also count as completed", () => {
+    expect(
+      weekDotKind({
+        date: monday,
+        today,
+        completedDates: [monday, tuesday],
+        restDates: [monday],
+      }),
+    ).toBe("rest");
+    expect(
+      weekDotKind({
+        date: tuesday,
+        today,
+        completedDates: [monday, tuesday],
+        restDates: [monday],
+      }),
+    ).toBe("filled");
+  });
+
+  it("marks future weekdays and empty past days distinctly", () => {
+    expect(
+      weekDotKind({
+        date: wednesday,
+        today,
+        completedDates: [monday],
+        restDates: [monday],
+      }),
+    ).toBe("future");
+    expect(
+      weekDotKind({
+        date: tuesday,
+        today,
+        completedDates: [monday],
+        restDates: [monday],
+      }),
+    ).toBe("empty");
   });
 });
