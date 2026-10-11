@@ -1,5 +1,5 @@
 import { addDays } from "@/domain/date";
-import { weekDotKind } from "@/domain/streak";
+import { weekDotKind, weekRingLabel } from "@/domain/streak";
 import styles from "./log-screen.module.css";
 
 const WEEKDAY_DOTS = ["M", "T", "W", "T", "F", "S", "S"];
@@ -34,6 +34,18 @@ export function WeekRing({
   const circumference = 2 * Math.PI * radius;
   const progress = Math.min(1, activeDays / Math.max(1, targetDays));
   const offset = circumference * (1 - progress);
+  const { shownActive, shownTarget, met } = weekRingLabel({
+    activeDays,
+    targetDays,
+  });
+  const ariaLabel = met
+    ? `${shownActive} of ${shownTarget} days this week, week met`
+    : `${shownActive} of ${shownTarget} days this week`;
+  const caption = met
+    ? restDates.length > 0
+      ? "Week met · rest days count"
+      : "Week met"
+    : null;
 
   return (
     <div className={styles.ringBlock}>
@@ -43,7 +55,7 @@ export function WeekRing({
         height={size}
         viewBox={`0 0 ${size} ${size}`}
         role="img"
-        aria-label={`${activeDays} of ${targetDays} days this week`}
+        aria-label={ariaLabel}
       >
         <circle
           cx={size / 2}
@@ -72,7 +84,7 @@ export function WeekRing({
           dominantBaseline="middle"
           className={styles.ringValue}
         >
-          {activeDays}/{targetDays}
+          {shownActive}/{shownTarget}
         </text>
       </svg>
       <div className={styles.ringDots} aria-hidden="true">
@@ -91,6 +103,7 @@ export function WeekRing({
           );
         })}
       </div>
+      {caption && <p className={styles.ringCaption}>{caption}</p>}
     </div>
   );
 }

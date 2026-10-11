@@ -169,7 +169,7 @@ export function LogScreen({
         disabled={rest.isPending}
         onClick={() => rest.toggle(today.localDate, today.isRestDay)}
       >
-        {today.isRestDay ? "Rest day · counts toward the week" : "Mark today as rest"}
+        {today.isRestDay ? "Rest day" : "Mark today as rest"}
       </button>
 
       <div className={styles.variationRow}>

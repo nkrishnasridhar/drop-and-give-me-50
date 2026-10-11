@@ -127,6 +127,25 @@ export function withPendingToday(
 
 export type WeekDotKind = "rest" | "filled" | "future" | "empty";
 
+/**
+ * Display label for the log week ring. Caps the numerator at the target so
+ * overshoot (e.g. 7 completed vs target 5) never reads as a broken fraction.
+ * Underlying `activeDays` counting is unchanged — rest still counts.
+ */
+export function weekRingLabel(input: {
+  activeDays: number;
+  targetDays: number;
+}): { shownActive: number; shownTarget: number; met: boolean } {
+  const shownTarget = Math.max(1, Math.min(7, input.targetDays));
+  const active = Math.max(0, input.activeDays);
+  const met = active >= shownTarget;
+  return {
+    shownActive: met ? shownTarget : active,
+    shownTarget,
+    met,
+  };
+}
+
 /** Log week-ring dot style: rest days share History's green, not the accent fill. */
 export function weekDotKind(input: {
   date: string;

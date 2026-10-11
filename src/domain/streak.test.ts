@@ -3,6 +3,7 @@ import { addDays, enumerateDates, startOfWeekMonday } from "./date";
 import {
   computeWeekStreak,
   weekDotKind,
+  weekRingLabel,
   withPendingToday,
   type DayStatus,
 } from "./streak";
@@ -130,6 +131,32 @@ describe("computeWeekStreak", () => {
     });
     expect(result.thisWeekCompleted).toBe(4);
     expect(result.thisWeekMet).toBe(false);
+  });
+});
+
+describe("weekRingLabel", () => {
+  it("shows progress below the target unclamped", () => {
+    expect(weekRingLabel({ activeDays: 3, targetDays: 5 })).toEqual({
+      shownActive: 3,
+      shownTarget: 5,
+      met: false,
+    });
+  });
+
+  it("marks the week met at the target without overshoot", () => {
+    expect(weekRingLabel({ activeDays: 5, targetDays: 5 })).toEqual({
+      shownActive: 5,
+      shownTarget: 5,
+      met: true,
+    });
+  });
+
+  it("caps overshoot so 7 completed vs target 5 reads as 5/5", () => {
+    expect(weekRingLabel({ activeDays: 7, targetDays: 5 })).toEqual({
+      shownActive: 5,
+      shownTarget: 5,
+      met: true,
+    });
   });
 });
 
