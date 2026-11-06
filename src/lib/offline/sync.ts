@@ -33,7 +33,6 @@ async function flush(): Promise<void> {
     reps: row.reps,
     occurredAt: row.occurredAt,
     tz: row.tz,
-    note: row.note,
     source: row.source,
   }));
 

@@ -24,7 +24,6 @@ const logSetInput = z.object({
   reps: z.number().int().min(1).max(500),
   occurredAt: z.string().datetime(),
   tz: z.string().min(1),
-  note: z.string().max(500).optional(),
   source: z.enum(["app", "shortcut"]).default("app"),
 });
 

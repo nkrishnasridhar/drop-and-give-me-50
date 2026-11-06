@@ -16,7 +16,6 @@ interface SetEditSheetProps {
   onSave: (input: {
     variationId: string;
     reps: number;
-    note: string | null;
   }) => Promise<void>;
   onDelete: () => Promise<void>;
 }
@@ -56,7 +55,6 @@ function SetEditForm({
 }: Omit<SetEditSheetProps, "set"> & { set: HistorySet }) {
   const [variationId, setVariationId] = useState(set.variationId);
   const [reps, setReps] = useState(set.reps);
-  const [note, setNote] = useState(set.note ?? "");
   const [pickerOpen, setPickerOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -111,13 +109,6 @@ function SetEditForm({
             +
           </button>
         </div>
-        <input
-          className={styles.noteInput}
-          value={note}
-          maxLength={500}
-          placeholder="Optional note"
-          onChange={(event) => setNote(event.target.value)}
-        />
         {error && <p className={styles.error}>{error}</p>}
         <button
           type="button"
@@ -127,7 +118,6 @@ function SetEditForm({
             void onSave({
               variationId,
               reps,
-              note: note.trim() ? note.trim() : null,
             })
           }
         >

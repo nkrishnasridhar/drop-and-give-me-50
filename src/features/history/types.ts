@@ -5,6 +5,5 @@ export interface HistorySet {
   reps: number;
   occurredAt: string;
   localDate: string;
-  note: string | null;
   intensityFactor: number;
 }

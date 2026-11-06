@@ -40,7 +40,6 @@ export const restRouter = router({
       z.object({
         tz: z.string().min(1),
         localDate: isoDateSchema.optional(),
-        note: z.string().max(500).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -56,7 +55,6 @@ export const restRouter = router({
         .values({
           userId: ctx.userId,
           localDate,
-          note: input.note,
         })
         .onConflictDoNothing();
 

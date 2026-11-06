@@ -134,8 +134,7 @@
   justify-content: center;
 }
 
-.variationChip,
-.noteToggle {
+.variationChip {
   appearance: none;
   border: 1px solid var(--border);
   background: var(--surface);
@@ -203,20 +202,6 @@
   font-size: 1.1rem;
   font-weight: 700;
   cursor: pointer;
-}
-
-.noteToggle {
-  align-self: center;
-}
-
-.noteInput {
-  width: 100%;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--foreground);
-  border-radius: 0.9rem;
-  padding: 0.75rem 0.9rem;
-  font: inherit;
 }
 
 .error {

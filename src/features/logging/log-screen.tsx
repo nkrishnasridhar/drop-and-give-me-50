@@ -44,8 +44,6 @@ export function LogScreen({
   const [counterOverride, setCounterOverride] = useState<number | null>(
     armedReps ?? null,
   );
-  const [noteOpen, setNoteOpen] = useState(false);
-  const [note, setNote] = useState("");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<LogToast | null>(null);
@@ -97,12 +95,9 @@ export function LogScreen({
       await logSet({
         variationId,
         reps: nextReps,
-        note: note.trim() || undefined,
         source: nextSource,
       });
       setCounterOverride(nextReps);
-      setNote("");
-      setNoteOpen(false);
       setToast(nextToast);
     } catch (caught) {
       setError(
@@ -209,24 +204,6 @@ export function LogScreen({
       >
         Log {reps}
       </button>
-
-      {noteOpen ? (
-        <input
-          className={styles.noteInput}
-          value={note}
-          maxLength={500}
-          placeholder="Optional note"
-          onChange={(event) => setNote(event.target.value)}
-        />
-      ) : (
-        <button
-          type="button"
-          className={styles.noteToggle}
-          onClick={() => setNoteOpen(true)}
-        >
-          Add a note
-        </button>
-      )}
 
       {error && <p className={styles.error}>{error}</p>}
 

@@ -21,7 +21,6 @@ export function useLogSet() {
   async function logSet(input: {
     variationId: string;
     reps: number;
-    note?: string;
     source: ClientSetSource;
   }): Promise<void> {
     const occurredAt = new Date();
@@ -31,7 +30,6 @@ export function useLogSet() {
       reps: input.reps,
       occurredAt: occurredAt.toISOString(),
       tz,
-      note: input.note,
       source: input.source,
       localDate: computeLocalDate(
         occurredAt,

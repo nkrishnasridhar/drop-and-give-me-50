@@ -16,6 +16,5 @@ export interface LogSetPayload {
   reps: number;
   occurredAt: string;
   tz: string;
-  note?: string;
   source: ClientSetSource;
 }

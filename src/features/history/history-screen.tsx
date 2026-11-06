@@ -163,7 +163,6 @@ export function HistoryScreen({ variations }: { variations: VariationOption[] })
                     <span className={styles.setName}>{item.variationName}</span>
                     <span className={styles.setMeta}>
                       {formatSetTime(item.occurredAt)}
-                      {item.note ? ` · ${item.note}` : ""}
                     </span>
                   </span>
                 </button>

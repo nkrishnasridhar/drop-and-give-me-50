@@ -17,7 +17,6 @@ const logSetInput = z.object({
   occurredAt: z.string().datetime(),
   // IANA zone, captured fresh at write time (docs/architecture.md §3).
   tz: z.string().min(1),
-  note: z.string().max(500).optional(),
   source: z.enum(["app", "shortcut"]).default("app"),
 });
 
@@ -48,7 +47,6 @@ export const setsRouter = router({
       occurredAt,
       localDate,
       tz: input.tz,
-      note: input.note,
     };
 
     const [set] = await ctx.db
@@ -106,7 +104,6 @@ export const setsRouter = router({
           reps: pushSets.reps,
           occurredAt: pushSets.occurredAt,
           localDate: pushSets.localDate,
-          note: pushSets.note,
           intensityFactor: variations.intensityFactor,
         })
         .from(pushSets)
@@ -150,13 +147,10 @@ export const setsRouter = router({
           id: z.string().uuid(),
           variationId: z.string().min(1).optional(),
           reps: z.number().int().min(1).max(500).optional(),
-          note: z.string().max(500).nullable().optional(),
         })
         .refine(
           (value) =>
-            value.variationId !== undefined ||
-            value.reps !== undefined ||
-            value.note !== undefined,
+            value.variationId !== undefined || value.reps !== undefined,
           { message: "At least one field to update is required." },
         ),
     )
@@ -196,7 +190,6 @@ export const setsRouter = router({
             ? { variationId: input.variationId }
             : {}),
           ...(input.reps !== undefined ? { reps: input.reps } : {}),
-          ...(input.note !== undefined ? { note: input.note } : {}),
           updatedAt: new Date(),
         })
         .where(eq(pushSets.id, input.id))
