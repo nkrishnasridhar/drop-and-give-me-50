@@ -1,9 +1,8 @@
-# Decisions Not to Revisit During Implementation
+# Product decisions
 
 These were made deliberately, after weighing real alternatives, to close off
 specific recurring failure modes in habit-tracking and fitness apps. Revisit
-them only if the stated trigger condition occurs — not because a later phase
-finds them inconvenient.
+one only if its stated trigger condition occurs.
 
 1. **`push_sets` is flat and atomic.** There is no workout, session, program,
    or plan entity, ever. A "set" is one drop-and-do-it event. Same-day sets

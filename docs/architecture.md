@@ -1,7 +1,7 @@
 # Drop and Give Me 50 — Technical Architecture
 
-This is the engineering counterpart to [prd.md](./prd.md). Anything listed
-in [decisions.md](./decisions.md) is locked; do not redesign it mid-phase.
+This is the engineering counterpart to [prd.md](./prd.md). The choices in
+[decisions.md](./decisions.md) stay in force.
 
 ## 1. Stack overview
 
@@ -9,10 +9,10 @@ Single Next.js application. No monorepo, no second service.
 
 - **Frontend:** Next.js App Router, React, TypeScript. The logging surface
   is a client component; the rest of the app shell is server-rendered
-  where possible. Motion for animation (Phase 2+), `navigator.vibrate` for
+  where possible. Motion for animation, `navigator.vibrate` for
   haptics (supported on Android, the target platform).
 - **Data layer:** TanStack Query with an IndexedDB-backed persister
-  (Dexie), plus an explicit outbox table (Phase 2). Writes hit IndexedDB
+  (Dexie), plus an explicit outbox table. Writes hit IndexedDB
   and the UI first; the network call is an afterthought, not a blocker.
 - **API:** tRPC, a single router tree. End-to-end types, no codegen, no
   schema drift between client and server.
@@ -26,16 +26,17 @@ Single Next.js application. No monorepo, no second service.
   from serverless functions is what exhausts Postgres connection limits.
   The HTTP driver issues one fetch per query with nothing to pool.
 - **Auth:** Auth.js v5, Google provider only, database session strategy,
-  Drizzle adapter (Phase 1).
-- **Notifications:** Web Push with VAPID, service worker via Serwist,
-  triggered by a Vercel Cron job every 15 minutes that fires for users
-  whose local reminder time has arrived (Phase 5).
-- **Analytics:** PostHog (free tier) for product events; `daily_stats` for
-  domain analytics. The two are not conflated.
+  Drizzle adapter.
+- **Notifications:** Web Push with VAPID, service worker via Serwist.
+  Vercel runs the reminder route once an hour (24 daily cron jobs, because
+  Hobby rejects a `*/15` schedule). A run sends at most one reminder per
+  user per local day, and only when that user's reminder time has arrived.
+- **Domain analytics:** `daily_stats`. There is no separate product-analytics
+  vendor.
 - **Testing:** Vitest for pure-function domain logic (streaks, load,
   timezone math) — these must be pure functions specifically so they're
   cheaply testable. Playwright for one end-to-end path: install, go
-  offline, log three sets, reconnect, verify sync (Phase 2).
+  offline, log three sets, reconnect, verify sync.
 - **CI:** GitHub Actions running typecheck, lint, unit tests, build, and a
   migration-drift check, on every push to `main` and every pull request.
   See `.github/workflows/ci.yml`.
@@ -50,11 +51,11 @@ real gap is a true home-screen widget, which no PWA can provide. Per
 the native-app question; nothing else (push reliability, install friction,
 app-store presence) is sufficient justification on its own.
 
-## 2. Offline write flow (target shape, built in Phase 2)
+## 2. Offline write flow
 
 ```mermaid
 flowchart LR
-  Tap[User taps preset] --> Local[Write to IndexedDB with client UUIDv7]
+  Tap[User taps Log] --> Local[Write to IndexedDB with client UUIDv7]
   Local --> UI[UI updates optimistically]
   Local --> Outbox[Append to outbox]
   Outbox --> SW[Service worker background sync]
@@ -83,7 +84,7 @@ real transactions, but at the cost of reintroducing the connection-pooling
 concern this driver choice was made to avoid — not worth it for a value
 that's designed to self-heal.
 
-## 3. Database schema (designed now, implemented in Phase 1)
+## 3. Database schema
 
 Auth.js tables (`users`, `accounts`, `sessions`, `verification_tokens`) are
 standard and omitted here.
@@ -113,18 +114,22 @@ same-day sets are grouped for display only.
 - `local_date` date — computed at write time from the user's timezone and
   day-start offset, never derived from UTC at read time
 - `tz` text — the IANA zone captured at write
-- `note` text nullable
+- `note` text nullable — unused by the app. Seed scripts write a private
+  tag here (`demo-year`, `ramp-fixture`) so a second run can recognize its
+  own rows. Logging, history, and edit do not read or write it.
 - `source` text — `app`, `shortcut`, `backfill`
-- `created_at`, `updated_at`, `deleted_at` (soft delete, so sync can
-  propagate tombstones)
+- `created_at`, `updated_at`, `deleted_at` (soft delete; lists omit
+  tombstoned rows)
 - Indexes: `(user_id, local_date)`, `(user_id, occurred_at desc)`,
-  `(user_id, updated_at)` for sync pull
+  `(user_id, updated_at)`
 
-**`rest_days`** — PK `(user_id, local_date)`, plus `note`, `created_at`. A
-rest day satisfies the weekly target.
+**`rest_days`** — PK `(user_id, local_date)`, plus `note`, `created_at`.
+`note` is the same kind of seed tag as on `push_sets`; the app does not
+read or write it. A rest day satisfies the weekly target.
 
-**`daily_stats`** — derived rollup, upserted in the same transaction as
-the set write. PK `(user_id, local_date)`.
+**`daily_stats`** — derived rollup, rewritten in the same request as the
+set write (two sequential statements, not one transaction — see §2).
+PK `(user_id, local_date)`.
 - `total_reps` int, `set_count` int, `volume_load` numeric (sum of
   `reps * intensity_factor`), `first_at`, `last_at`, `top_variation_id`,
   `is_rest_day` bool
@@ -139,10 +144,10 @@ the set write. PK `(user_id, local_date)`.
 **`push_subscriptions`** — `id`, `user_id`, `endpoint` (unique), `p256dh`,
 `auth`, `user_agent`, `last_success_at`, `failure_count`.
 
-**Not tables.** Streaks, personal records, milestones, and achievements
-are computed from `push_sets` and `daily_stats`, never stored as their own
-source of truth (see [decisions.md](./decisions.md#8)). Streak calculation
-is a gaps-and-islands SQL query over `daily_stats`.
+**Not tables.** Streaks, personal records, and milestones are computed
+from `push_sets` and `daily_stats`, never stored as their own source of
+truth (see [decisions.md](./decisions.md#8)). The week streak is a pure
+function over those day rows (`src/domain/streak.ts`).
 
 ```mermaid
 erDiagram
@@ -154,13 +159,12 @@ erDiagram
   variations ||--o{ push_sets : typed_as
 ```
 
-## 4. API boundaries (Phase 1+)
+## 4. API boundaries
 
-One tRPC router tree. Every mutation is idempotent on a client-supplied
-ID.
+One tRPC router tree. Set writes are idempotent on a client-supplied ID.
 
-- `sets.log` — upsert on `id`; recomputes `daily_stats` in the same
-  transaction
+- `sets.log` — upsert on `id`, then recomputes `daily_stats` as the next
+  statement in the same request
 - `sets.update`, `sets.delete` (soft), `sets.list` (cursor-paginated)
 - `days.today` — totals, ring progress, goal state
 - `days.range` — `daily_stats` rows for the heatmap, bounded to a date
@@ -173,42 +177,41 @@ ID.
 - `variations.list`
 - `settings.get`, `settings.update`, `settings.completeOnboarding`
 - `push.subscribe`, `push.unsubscribe`, `push.sendTest`, `push.publicKey`
-- `sync.pull` — everything changed since a cursor, including tombstones
 
 ## 5. Folder structure
 
 ```
 src/
-  app/            routes only (App Router: (auth), (onboarding), (app) groups)
-  features/       feature-first modules — logging, history, stats, health,
-                  settings — each owning its components, hooks, and logic
+  app/            routes only (App Router: (onboarding) and (app) groups,
+                  plus /offline)
+  features/       logging, history, stats, settings, onboarding, shell
   server/         tRPC routers, db schema (server/db), services
-  lib/            offline outbox, date handling, push — cross-feature utilities
-  domain/         pure functions (streaks, load, records) — the direct unit
-                  test target, kept free of framework/IO concerns
-docs/             this document, the PRD, the locked decisions record, and the case study
+  lib/            offline outbox, push, env — cross-feature utilities
+  domain/         pure functions (streaks, load, records, dates) — the
+                  direct unit-test target, kept free of framework/IO
+docs/             this document, the product vision, the decisions record,
+                  and the case study
 drizzle/          generated SQL migrations + snapshot metadata (committed)
-e2e/              Playwright airplane-mode spec (Phase 6; not on GitHub Actions)
+e2e/              Playwright airplane-mode spec (not on GitHub Actions)
 scripts/          variation / demo / ramp seeds, Lighthouse runner
 ```
 
-Feature folders over type folders because almost every future change is
-scoped to one feature, and the blast radius of that change should be one
-directory, not four.
+Feature folders over type folders so a change to one screen stays in one
+directory.
 
-**Currently present (through Phase 6).** Phase 1's schema, auth, and tRPC
-spine; the Log screen with the 7-day week ring and rest-day toggle;
-History (heatmap, grouped edit/delete, week-streak); Stats (lifetime,
-PRs, consistency rate, load, educational cards); Settings; 3-card
-onboarding with the health disclaimer; the IndexedDB outbox; TanStack
-Query persistence; a Serwist service worker with an `/offline` fallback
-and Web Push display; a web app manifest with Log 20 / Log 50 shortcuts;
-daily local-time reminders (Vercel Cron every 15 minutes, at most one
-per local day); in-app PR/milestone toasts; a year-of-training seed
-(`npm run db:seed:demo`); the Playwright offline-sync spec
-(`npm run test:e2e`); and the Lighthouse + installability check
-(`npm run lighthouse`). The case study lives in
-[docs/case-study.md](./case-study.md).
+**What the app is.** Schema, Google auth, and the tRPC routers above. The
+Log screen: counter, last-used variation, Log button, 7-day week ring,
+rest-day toggle. No preset chips and no set notes. History: heatmap,
+grouped edit/delete, week streak. Stats: lifetime, PRs, consistency rate,
+load, educational cards. Settings. Two onboarding cards, then the health
+disclaimer. IndexedDB outbox and TanStack Query persistence. A Serwist
+service worker with an `/offline` fallback and Web Push display. A web
+app manifest with Log 20 / Log 50 shortcuts. At most one reminder per
+local day, from 24 hourly Vercel cron jobs. In-app PR/milestone toasts.
+A year-of-training seed (`npm run db:seed:demo`). The Playwright
+offline-sync spec (`npm run test:e2e`) logs three sets by tapping Log 20.
+The Lighthouse + installability check (`npm run lighthouse`). The case
+study lives in [docs/case-study.md](./case-study.md).
 
 ## 6. Environment and configuration
 
@@ -225,8 +228,8 @@ per local day); in-app PR/milestone toasts; a year-of-training seed
   it raises `UntrustedHost` and every request looks signed-out. This is
   not a new provider or session strategy.
 - See `.env.example` for the current full list (`VAPID_*` and `CRON_SECRET`
-  are required only for Phase 5 push; `DEMO_SEED_USER_ID` / `RAMP_SEED_USER_ID`
-  are optional seed-script ids; the rest of the app still runs without them).
+  are required for push; `DEMO_SEED_USER_ID` / `RAMP_SEED_USER_ID` are
+  optional seed-script ids; the rest of the app still runs without them).
 
 ## 7. CI and the migration-drift check
 
@@ -252,101 +255,24 @@ a new CI architecture — Postgres, browser install, secrets — which §1
 does not include. Run them locally (or on demand) against the same Neon
 the app already uses.
 
-## 8. Development phases
-
-**Phase 0 — Foundations. Complete.** Repo, Next.js, TypeScript, Drizzle,
-Neon wiring, GitHub Actions CI, and this documentation set. Success:
-`npm run build`, `typecheck`, `lint`, and `test` all pass in CI on a push
-to `main`, and the app is live on Vercel with `DATABASE_URL` configured
-against a real Neon project — both confirmed.
-
-**Phase 1 — Data spine (week 1). Complete.** Schema and migrations applied
-to the real Neon database, 22 variations seeded with intensity factors,
-Auth.js wired for Google, and `sets.log` / `days.today` proven end to
-end. `computeLocalDate` has unit tests covering DST transitions in both
-directions and the day-start offset.
-
-**Phase 2 — The delight pass (week 2). Implementation complete.** Log
-screen with presets, counter, variation sheet, haptics, and optimistic
-totals; IndexedDB outbox with idempotent drain; Serwist service worker
-via `@serwist/turbopack` (same Serwist runtime, keeping the existing
-Turbopack build instead of forcing webpack); installable manifest with
-Log 20 / Log 50 shortcuts. Playwright's airplane-mode end-to-end test is
-deferred to Phase 6, where the portfolio pass owns it; Phase 2 covers
-the drain path with unit tests in `src/domain/outbox.test.ts`.
-
-**Phase 3 — Memory (week 3). Implementation complete.** Heatmap, 7-day
-ring, grouped history with edit/delete, rest days, week-streak
-computation. Success: the app gets opened to be looked at, not only to
-log. Settings UI, the stats screen, onboarding, and push remain later
-phases — `weeklyTargetDays` / `dailyRepGoal` are read from `user_settings`
-inside `days.today`, without a settings router.
-
-**Phase 4 — Stats and health (week 4). Implementation complete.** Full
-stats screen, load calculation, the three educational cards, onboarding,
-disclaimer. Success: the ramp card fires correctly against seeded
-synthetic data (`src/domain/load.test.ts`, optional `npm run db:seed:ramp`).
-
-**Phase 5 — Nudges (week 5). Implementation complete.** VAPID keys,
-subscription management, Vercel Cron every 15 minutes, one daily reminder
-respecting local time (skipped if the user already logged or rested),
-in-app PR/milestone toasts. Success: at most one useful notification per
-day (`src/domain/reminder.test.ts`).
-
-**Phase 6 — Portfolio pass (week 6). Implementation complete.** README
-with architecture diagrams, a seeded demo year (`src/domain/demo-year.ts`,
-`npm run db:seed:demo`), Lighthouse against the production PWA shell
-(`npm run lighthouse`; Lighthouse 12+ no longer scores a PWA category, so
-the script asserts Chrome's installability surface — manifest, icons,
-service worker — beside the remaining category scores), the Playwright
-offline test (`e2e/offline-log.spec.ts`: install SW, go offline, log the
-three default presets, reconnect, assert outbox drain + Postgres rows),
-and the case study in [docs/case-study.md](./case-study.md). Demo data is
-a seed script against the same `push_sets` / `rest_days` tables as live
-use (`source: "backfill"`, `note: "demo-year"`), not a second API or a
-test-only auth provider. The e2e session is a row in `session` plus the
-Auth.js database-session cookie.
-
-**The gate:** no Version 2 feature (§4 in the PRD) is built until the user
-has logged on 30 separate days.
-
-## 9. First implementation milestone (target: end of Phase 1)
-
-**"One real set, stored."** Done when:
-- [x] The schema is migrated onto the real Neon database (`db:generate` +
-      `db:migrate`, not `db:push` — see §7) and 22 variations are seeded
-      with intensity factors.
-- [x] Google sign-in works against the deployed Vercel URL from an
-      Android phone — OAuth client created by the account owner.
-- [x] A minimal form posts a set through `sets.log` and the row appears in
-      Postgres with the correct `local_date` for the user's timezone.
-- [x] `days.today` returns today's total and the Log screen displays it.
-- [x] Unit tests cover `computeLocalDate` across a DST boundary (both
-      directions) and a day-start offset.
-- [x] CI is green on `main` (pending this work being pushed).
-
-No styling, no offline, no heatmap yet — the goal is proving the spine end
-to end on real hardware before anything is made to look good.
-
-## 10. Risks
+## 8. Risks
 
 - **Offline sync correctness** is the top engineering risk. Mitigated by
   idempotent client-generated keys, single-table writes, LWW, and one
-  mandatory end-to-end airplane-mode test.
+  end-to-end airplane-mode test.
 - **Timezones** are the top silent-bug risk. Mitigated by storing
   `local_date` at write time and testing DST explicitly.
 - **Logging friction** is the top product risk — if logging takes longer
-  than doing five push-ups, the app dies. Mitigated by presets, manifest
-  shortcuts, and treating time-to-log as a guardrail metric.
+  than doing five push-ups, the app dies. Mitigated by remembering the
+  last variation and the last rep count, the home-screen shortcuts, and
+  treating time-to-log as a guardrail.
 - **Health messaging** is the top liability risk. Mitigated by the
   disclaimer, the absence of personalized medical claims, visible
   thresholds, and honest labelling of contested heuristics (e.g. the ramp
   card's acute:chronic load ratio is a rough, visible heuristic, not a
   medical judgment).
-- **Scope** is the top overall risk. Mitigated by the 30-day usage gate
-  before any Version 2 feature starts.
+- **Scope.** The product is the vision in [prd.md](./prd.md). Features
+  that document refuses stay out.
 - **Scalability is a non-issue at this user count.** The genuinely
   interesting engineering problems here are read-path rollups and offline
-  convergence, not write throughput — and saying so plainly is a stronger
-  signal in an interview than describing sharding this app will never
-  need.
+  convergence, not write throughput.

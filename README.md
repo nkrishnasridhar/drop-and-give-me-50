@@ -4,22 +4,13 @@ A beautiful, installable web app for tracking one exercise: push-ups. Not a
 generic fitness tracker — see [docs/prd.md](./docs/prd.md) for why that's a
 deliberate choice, not a limitation.
 
-- [docs/prd.md](./docs/prd.md) — product vision, philosophy, scope, health
-  philosophy, rejected features
+- [docs/prd.md](./docs/prd.md) — product vision, philosophy, the app as
+  it is, health philosophy, what the product refuses
 - [docs/architecture.md](./docs/architecture.md) — stack, schema, API
-  boundaries, folder structure, roadmap, risks
-- [docs/decisions.md](./decisions.md) — decisions locked for the duration
-  of the build, with rationale
+  boundaries, folder structure, risks
+- [docs/decisions.md](./decisions.md) — product decisions, with rationale
 - [docs/case-study.md](./docs/case-study.md) — portfolio write-up, led by
   what was cut
-
-## Status
-
-**Phase 6 — Portfolio pass.** README, a year of seeded demo data, a
-Lighthouse check against the production PWA shell, the Playwright
-offline-sync path, and the case study. No Version 2 feature is built
-until this user has logged on 30 separate days — see
-[docs/architecture.md §8](./docs/architecture.md#8-development-phases).
 
 ## Architecture
 
@@ -28,7 +19,7 @@ never stored as their own source of truth.
 
 ```mermaid
 flowchart LR
-  Tap[User taps preset] --> Local[Write to IndexedDB with client UUIDv7]
+  Tap[User taps Log] --> Local[Write to IndexedDB with client UUIDv7]
   Local --> UI[UI updates optimistically]
   Local --> Outbox[Append to outbox]
   Outbox --> SW[Service worker / online listener]

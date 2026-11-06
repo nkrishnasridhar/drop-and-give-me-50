@@ -1,6 +1,6 @@
-# Drop and Give Me 50 — Product Requirements Document
+# Drop and Give Me 50 — Product vision
 
-## 1. Product vision
+## Product vision
 
 **Mission.** Make doing push-ups feel the way committing code to GitHub
 feels: small, frequent, visibly accumulating, and quietly satisfying.
@@ -34,7 +34,7 @@ stuck, plus a body of variation and volume data interesting enough to look
 at on its own terms — without the app ever asking the user to plan a
 workout, follow a program, or compare themselves to anyone else.
 
-## 2. North Star and guardrails
+## North Star and guardrails
 
 **North Star: Weekly Consistency Rate** — the percentage of the trailing 12
 weeks in which active days met or exceeded the user's weekly target.
@@ -51,10 +51,10 @@ regardless of how good that feature looks otherwise):
   realistic injury path this app can actually influence.
 
 **Health check (not a guardrail, a diagnostic):** day-90 retention. Is the
-user still logging in week 13. Everything else — stats, badges, heatmaps —
-is decoration relative to this question.
+user still logging in week 13. Stats and the heatmap are decoration
+relative to this question.
 
-## 3. Product philosophy
+## Product philosophy
 
 Optimize for consistency over intensity, habit formation over workout
 programming, simplicity over feature quantity, delightful UX over
@@ -76,40 +76,48 @@ This is why the product differs from:
   volume and ignore recovery; this app actively pushes back on unsafe
   ramping.
 
-## 4. Core features by version
+## The app
 
-### MVP (see [architecture.md](./architecture.md) for full technical scope)
+Four screens: **Log** (home), **History**, **Stats**, **Settings**.
 
-Four screens: **Log** (home), **History**, **Stats**, **Settings**. Plus:
-3-card onboarding with the health disclaimer, Google sign-in, offline-first
-writes, an installable PWA with manifest shortcuts, and a maximum of one
-push reminder per day.
+**Log.** A counter that remembers the last rep count, the last-used
+variation, and one Log button. The installed PWA can also open already
+armed for 20 or 50 from the home-screen shortcuts. Today's total, the
+7-day ring, and the rest-day toggle sit on the same screen. There is no
+note on a set, and there are no one-tap preset chips.
 
-Every MVP feature is justified by one of: it is the core logging loop, it
-is required for the North Star to be measurable, or it is the minimum
-health-safety messaging this app is responsible for given its subject
-matter.
+**History.** A heatmap, sets grouped by day, edit and delete, and the
+week streak.
 
-### Version 2 (gated — see §8)
+**Stats.** Lifetime reps, current and longest week-streak, biggest single
+day, average reps per set, variation breakdown by family, a
+sessions-by-hour clock, and rolling 7-day load against a 28-day baseline.
+Three educational cards can surface from that load. Personal records and
+milestones appear as a toast after a log. They are never the success
+metric. There are no badges.
 
-Achievements/badges, custom user-defined variations, a weekly one-tap "did
-you train pulling?" check-in, shareable image export of the heatmap.
+**Settings.** Weekly target, daily rep goal, reminder time, haptics, and
+the disclaimer, which stays re-readable here.
 
-### Version 3 / future ideas
+Around those screens: Google sign-in, two onboarding cards then the health
+disclaimer, offline-first writes, and at most one push reminder per local
+day.
 
-Seasonal challenges, weekly summary emails, multi-device conflict
-resolution UI, Google Fit export.
+Technical scope lives in [architecture.md](./architecture.md).
 
-### Explicitly rejected (not deferred — removed from consideration)
+## What this product refuses
 
 - AI or LLM features of any kind. There is no question in this product an
   LLM answers better than a deterministic rule.
 - Camera-based rep counting / pose estimation — unreliable, and slower than
   manual entry, which defeats the point.
 - Social features: friends, feeds, leaderboards, comparisons.
-- XP points and levels — a meaningless second currency layered on reps.
+- XP points, levels, and badges — a meaningless second currency layered on
+  reps.
 - Progression paths / skill trees between variations — this is workout
   programming.
+- Custom user-defined variations, a pulling-work check-in, and shareable
+  heatmap export.
 - Rest timers, set timers, workout builders, supersets, "programs."
 - Sound effects and drill-sergeant text-to-speech — novel for four days,
   then irritating, and impossible to unhear once shipped. The military
@@ -122,7 +130,7 @@ resolution UI, Google Fit export.
 - Monorepo, microservices, message queues, container orchestration for a
   single Postgres database.
 
-## 5. Health philosophy
+## Health philosophy
 
 Push-up challenge culture rewards volume and ignores recovery. This app
 takes the opposite position: consistency matters more than intensity, and
@@ -153,7 +161,7 @@ Settings):
 > have an existing condition or injury, talk to a professional before
 > starting.
 
-## 6. Habit psychology, applied honestly
+## Habit psychology, applied honestly
 
 - **The heatmap is the retention engine**, not the stats page — it works
   for the same reason the GitHub contribution graph does: accumulated,
@@ -169,34 +177,3 @@ Settings):
 - **Explicitly avoided:** guilt-framed notifications, variable-ratio reward
   mechanics, artificial scarcity, streak-repair purchases, social
   comparison of any kind.
-
-## 7. Statistics and gamification
-
-Meaningful, not decorative: lifetime reps, current and longest week-streak,
-biggest single day, average reps per set, variation breakdown by family,
-a sessions-by-hour clock, and rolling 7-day load against a 28-day baseline.
-Rewards (PRs, milestones, badges) are surfaced in the UI; they are never
-success metrics themselves — the North Star is Weekly Consistency Rate, not
-the count of badges earned.
-
-## 8. Roadmap and the 30-day gate
-
-Phase 0 (foundations) → Phase 1 (data spine) → Phase 2 (delight/offline) →
-Phase 3 (history and streaks) → Phase 4 (stats and health) → Phase 5
-(nudges) → Phase 6 (portfolio pass). Full phase-by-phase detail, risks, and
-milestones live in [architecture.md](./architecture.md#development-phases).
-
-**No Version 2 feature is built until the user has logged on 30 separate
-days.** At that point the app's own `daily_stats` shows what is actually
-missing from real use, which is better evidence than anything speculated
-today.
-
-## 9. Portfolio framing
-
-Lead any case study with what was cut, not what was built — "I designed
-forty features and shipped twelve, here is the reasoning" is a stronger
-signal of product judgment than feature count. Technically, lead with the
-offline outbox and the discipline of deriving all rewards state from raw
-logs rather than storing it, since those are the two decisions a senior
-reviewer will notice first. A demo mode seeded with a year of synthetic
-data matters for presentation — an empty heatmap sells nothing.
