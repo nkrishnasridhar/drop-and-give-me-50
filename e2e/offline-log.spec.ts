@@ -8,8 +8,6 @@ import {
   sumUserReps,
 } from "./helpers/session";
 
-const PRESETS = [10, 20, 50] as const;
-
 test.describe.configure({ mode: "serial" });
 
 test("install, go offline, log three sets, reconnect, verify sync", async ({
@@ -43,11 +41,12 @@ test("install, go offline, log three sets, reconnect, verify sync", async ({
 
     await context.setOffline(true);
 
-    for (const preset of PRESETS) {
-      await page.getByRole("button", { name: `Quick log ${preset}` }).click();
+    const logButton = page.getByRole("button", { name: "Log 20", exact: true });
+    for (let i = 0; i < 3; i++) {
+      await logButton.click();
     }
 
-    const expectedReps = PRESETS[0] + PRESETS[1] + PRESETS[2];
+    const expectedReps = 60;
     await expect(
       page.getByLabel(`${expectedReps} reps today`),
     ).toBeVisible();

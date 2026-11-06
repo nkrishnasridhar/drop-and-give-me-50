@@ -10,7 +10,7 @@ import styles from "./onboarding-screen.module.css";
 const CARDS = [
   {
     title: "The set is the whole workout",
-    body: "Drop, do the reps, log in one tap. No programs, no sessions, no planner. Last-used variation, then a preset. That's the product.",
+    body: "Drop, do the reps, log in one tap. No programs, no sessions, no planner. Last-used variation, then the counter. That's the product.",
   },
   {
     title: "Rest is part of the week",

@@ -185,28 +185,6 @@
   cursor: pointer;
 }
 
-.presets {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.6rem;
-  width: 100%;
-}
-
-.preset {
-  appearance: none;
-  min-height: 3.25rem;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--foreground);
-  border-radius: 1rem;
-  font: inherit;
-  font-size: 1.15rem;
-  font-weight: 650;
-  font-variant-numeric: tabular-nums;
-  cursor: pointer;
-}
-
-.preset:disabled,
 .primary:disabled,
 .stepper button:disabled {
   opacity: 0.4;

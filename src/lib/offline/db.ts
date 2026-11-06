@@ -71,7 +71,6 @@ export async function removeOutboxIds(ids: readonly string[]): Promise<void> {
   notifyOutboxChanged();
 }
 
-const RECENT_REPS_KEY = "recentReps";
 const LAST_VARIATION_KEY = "lastVariationId";
 const LAST_COUNTER_KEY = "lastCounter";
 const TODAY_FLOOR_KEY = "todayFloor";
@@ -110,23 +109,10 @@ export async function recordLocalLog(
   variationId: string,
 ): Promise<void> {
   if (!db) return;
-  const existing = (await db.prefs.get(RECENT_REPS_KEY))?.value;
-  const previous = Array.isArray(existing)
-    ? existing.filter((value): value is number => typeof value === "number")
-    : [];
   await db.prefs.bulkPut([
-    { key: RECENT_REPS_KEY, value: [...previous, reps].slice(-40) },
     { key: LAST_VARIATION_KEY, value: variationId },
     { key: LAST_COUNTER_KEY, value: reps },
   ]);
-}
-
-export async function readRecentReps(): Promise<number[]> {
-  if (!db) return [];
-  const existing = (await db.prefs.get(RECENT_REPS_KEY))?.value;
-  return Array.isArray(existing)
-    ? existing.filter((value): value is number => typeof value === "number")
-    : [];
 }
 
 export async function readLastVariationId(): Promise<string | undefined> {

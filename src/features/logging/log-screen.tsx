@@ -2,9 +2,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "motion/react";
-import { useMemo, useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { selectLogToast, type LogToast } from "@/domain/nudge";
-import { learnPresets } from "@/domain/presets";
 import type { ClientSetSource } from "@/domain/set";
 import { NudgeToast } from "@/features/logging/nudge-toast";
 import { useLogSet } from "@/features/logging/use-log-set";
@@ -13,11 +12,7 @@ import { useIsClient, useTodayTotals } from "@/features/logging/use-today";
 import { VariationSheet } from "@/features/logging/variation-sheet";
 import { WeekRing } from "@/features/logging/week-ring";
 import type { VariationOption } from "@/features/logging/types";
-import {
-  readLastCounter,
-  readLastVariationId,
-  readRecentReps,
-} from "@/lib/offline/db";
+import { readLastCounter, readLastVariationId } from "@/lib/offline/db";
 import { useTRPC } from "@/lib/trpc";
 import styles from "./log-screen.module.css";
 
@@ -64,10 +59,6 @@ export function LogScreen({
     queryKey: ["local", "lastCounter"],
     queryFn: readLastCounter,
   });
-  const recentRepsQuery = useQuery({
-    queryKey: ["local", "recentReps"],
-    queryFn: readRecentReps,
-  });
 
   const variationId =
     pickedVariationId ??
@@ -79,10 +70,6 @@ export function LogScreen({
     "";
   const selectedVariation = variations.find((variation) => variation.id === variationId);
   const reps = counterOverride ?? lastCounterQuery.data ?? 20;
-  const presets = useMemo(
-    () => learnPresets(recentRepsQuery.data ?? []),
-    [recentRepsQuery.data],
-  );
 
   async function commit(nextReps: number, nextSource: ClientSetSource) {
     if (!variationId) {
@@ -212,21 +199,6 @@ export function LogScreen({
             +
           </button>
         </div>
-      </div>
-
-      <div className={styles.presets}>
-        {presets.map((preset) => (
-          <button
-            key={preset}
-            type="button"
-            className={styles.preset}
-            aria-label={`Quick log ${preset}`}
-            disabled={!variationId}
-            onClick={() => void commit(preset, source)}
-          >
-            {preset}
-          </button>
-        ))}
       </div>
 
       <button
