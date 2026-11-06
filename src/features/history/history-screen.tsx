@@ -8,8 +8,8 @@ import { Heatmap } from "@/features/history/heatmap";
 import { SetEditSheet } from "@/features/history/set-edit-sheet";
 import type { HistorySet } from "@/features/history/types";
 import { useHistoryData, useSetMutations } from "@/features/history/use-history";
-import type { VariationOption } from "@/features/logging/types";
 import { useRestDay } from "@/features/logging/use-rest-day";
+import { useVariationOptions } from "@/features/logging/use-variations";
 import styles from "./history-screen.module.css";
 
 function formatSetTime(iso: string): string {
@@ -56,7 +56,8 @@ function DayHeader({
   );
 }
 
-export function HistoryScreen({ variations }: { variations: VariationOption[] }) {
+export function HistoryScreen() {
+  const variations = useVariationOptions();
   const data = useHistoryData();
   const rest = useRestDay();
   const mutations = useSetMutations();

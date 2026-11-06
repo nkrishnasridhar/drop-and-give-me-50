@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { HistoryScreen } from "@/features/history/history-screen";
 import { LogScreen } from "@/features/logging/log-screen";
 import { SettingsScreen } from "@/features/settings/settings-screen";
@@ -33,13 +33,15 @@ export default function OfflinePage() {
   return (
     <main className="appShell appShellWithTabs">
       {tab === "history" ? (
-        <HistoryScreen variations={variationsQuery.data} />
+        <HistoryScreen />
       ) : tab === "stats" ? (
         <StatsScreen />
       ) : tab === "settings" ? (
         <SettingsScreen />
       ) : (
-        <LogScreen variations={variationsQuery.data} />
+        <Suspense fallback={null}>
+          <LogScreen />
+        </Suspense>
       )}
       <TabBar active={tab} onSelect={setTab} />
     </main>
