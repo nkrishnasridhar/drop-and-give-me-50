@@ -173,6 +173,8 @@
 }
 
 .stepper button {
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
   width: 3.25rem;
   height: 3.25rem;
   border-radius: 999px;
@@ -192,6 +194,7 @@
 
 .primary {
   appearance: none;
+  -webkit-tap-highlight-color: transparent;
   width: 100%;
   min-height: 3.5rem;
   border: 0;
