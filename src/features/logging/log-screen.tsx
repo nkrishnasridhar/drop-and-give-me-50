@@ -2,7 +2,6 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "motion/react";
-import { useSearchParams } from "next/navigation";
 import { useState, useCallback } from "react";
 import { selectLogToast, type LogToast } from "@/domain/nudge";
 import type { ClientSetSource } from "@/domain/set";
@@ -12,29 +11,28 @@ import { useRestDay } from "@/features/logging/use-rest-day";
 import { useIsClient, useTodayTotals } from "@/features/logging/use-today";
 import { VariationSheet } from "@/features/logging/variation-sheet";
 import { WeekRing } from "@/features/logging/week-ring";
-import { useVariationOptions } from "@/features/logging/use-variations";
+import type { VariationOption } from "@/features/logging/types";
 import { readLastCounter, readLastVariationId } from "@/lib/offline/db";
 import { useTRPC } from "@/lib/trpc";
 import styles from "./log-screen.module.css";
 
-function parseArmedReps(value: string | null): number | undefined {
-  if (!value) return undefined;
-  const parsed = Number.parseInt(value, 10);
-  if (!Number.isInteger(parsed) || parsed < 1 || parsed > 500) return undefined;
-  return parsed;
+interface LogScreenProps {
+  variations: VariationOption[];
+  armedReps?: number;
+  source?: ClientSetSource;
 }
 
-export function LogScreen() {
-  const params = useSearchParams();
-  const armedReps = parseArmedReps(params.get("reps"));
-  const source: ClientSetSource =
-    params.get("source") === "shortcut" ? "shortcut" : "app";
-  const variations = useVariationOptions();
+export function LogScreen({
+  variations,
+  armedReps,
+  source = "app",
+}: LogScreenProps) {
   const { logSet } = useLogSet();
   const rest = useRestDay();
   const today = useTodayTotals();
   const trpc = useTRPC();
   const isClient = useIsClient();
+  useQuery(trpc.variations.list.queryOptions());
   const overview = useQuery({
     ...trpc.stats.overview.queryOptions({ tz: today.tz }),
     enabled: isClient,
