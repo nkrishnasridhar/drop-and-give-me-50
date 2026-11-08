@@ -166,7 +166,7 @@ One tRPC router tree. Set writes are idempotent on a client-supplied ID.
 - `sets.log` — upsert on `id`, then recomputes `daily_stats` as the next
   statement in the same request
 - `sets.update`, `sets.delete` (soft), `sets.list` (cursor-paginated)
-- `days.today` — totals, ring progress, goal state
+- `days.today` — totals, weekday week state, goal state
 - `days.range` — `daily_stats` rows for the heatmap, bounded to a date
   window
 - `rest.mark`, `rest.unmark`
@@ -200,7 +200,7 @@ Feature folders over type folders so a change to one screen stays in one
 directory.
 
 **What the app is.** Schema, Google auth, and the tRPC routers above. The
-Log screen: counter, last-used variation, Log button, 7-day week ring,
+Log screen: counter, last-used variation, Log button, 7-day weekday dots,
 rest-day toggle. No preset chips and no set notes. History: heatmap,
 grouped edit/delete, week streak. Stats: lifetime, PRs, consistency rate,
 load, educational cards. Settings. Two onboarding cards, then the health

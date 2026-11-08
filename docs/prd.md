@@ -83,14 +83,14 @@ Four screens: **Log** (home), **History**, **Stats**, **Settings**.
 **Log.** A counter that remembers the last rep count, the last-used
 variation, and one Log button. The installed PWA can also open already
 armed for 20 or 50 from the home-screen shortcuts. Today's total, the
-7-day ring, and the rest-day toggle sit on the same screen. There is no
+seven weekday dots, and the rest-day toggle sit on the same screen. There is no
 note on a set, and there are no one-tap preset chips.
 
 **History.** A heatmap, sets grouped by day, edit and delete, and the
 week streak.
 
-**Stats.** Lifetime reps, current and longest week-streak, biggest single
-day, average reps per set, variation breakdown by family, a
+**Stats.** Weeks on target rate, total reps, current and longest
+week-streak, best single day, reps per set, variation breakdown by family, a
 sessions-by-hour clock, and rolling 7-day load against a 28-day baseline.
 Three educational cards can surface from that load. Personal records and
 milestones appear as a toast after a log. They are never the success
@@ -125,8 +125,8 @@ Technical scope lives in [architecture.md](./architecture.md).
 - Light/dark theming system — one deliberately designed dark theme.
 - Tracking any exercise other than push-ups — the moment pull-ups get a
   rep field, this stops being a push-up app.
-- A charting library — the heatmap and progress ring are simple enough to
-  be hand-built as SVG, which is also less code.
+- A charting library — the heatmap and log week indicator are simple enough
+  to be hand-built as SVG, which is also less code.
 - Monorepo, microservices, message queues, container orchestration for a
   single Postgres database.
 
@@ -167,7 +167,7 @@ Settings):
   for the same reason the GitHub contribution graph does: accumulated,
   visible, personally-earned history where gaps are legible. This is
   endowment, not manipulation.
-- **The 7-day progress ring** exploits the goal-gradient effect
+- **The weekday row on Log** exploits the goal-gradient effect
   legitimately, because the goal is one the user set for themselves.
 - **The weekly reset** gives a fresh-start effect every week — the antidote
   to "I already broke it, why bother."

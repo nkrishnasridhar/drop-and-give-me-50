@@ -15,7 +15,7 @@ Removed from consideration, not saved for later:
   is no parent object to attach a program to, which is the point.
 - **AI, camera-counted reps, social, XP, theming, a charting library,
   a second service.** None of those answer a question this app actually
-  has. The heatmap and week ring are hand-built SVG. Rewards are derived
+  has. The heatmap and week dots are hand-built SVG. Rewards are derived
   from logs, not stored. Auth is Google, one Next.js app, one Postgres
   database.
 - **Badges, custom variations, a pulling check-in, heatmap export.** None
@@ -47,7 +47,7 @@ path is the Playwright test: install the service worker, go offline, tap
 Log 20 three times, reconnect, and assert the outbox is empty and
 Postgres has three rows.
 
-**Rewards are a read model.** Streaks, PRs, milestones, and the week ring
+**Rewards are a read model.** Streaks, PRs, milestones, and the week dots
 are computed from `push_sets` and `daily_stats`. `daily_stats` itself is a
 derived cache, fully recomputed for a day after any write that could
 affect it. There is no `achievements` table to drift from the log. That
