@@ -8,7 +8,7 @@ deliberate choice, not a limitation.
   it is, health philosophy, what the product refuses
 - [docs/architecture.md](./docs/architecture.md) — stack, schema, API
   boundaries, folder structure, risks
-- [docs/decisions.md](./decisions.md) — product decisions, with rationale
+- [docs/decisions.md](./docs/decisions.md) — product decisions, with rationale
 - [docs/case-study.md](./docs/case-study.md) — portfolio write-up, led by
   what was cut
 
