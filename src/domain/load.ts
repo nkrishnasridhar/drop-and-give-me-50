@@ -98,19 +98,19 @@ export const EDUCATIONAL_CARDS: Record<
   { title: string; body: string; threshold: string }
 > = {
   ramp: {
-    title: "That's a fast jump",
-    body: "This week's load is well above your last four-week average. Ease off or take a rest day. Muscle grows during recovery, not during the binge.",
-    threshold: `Fires at ${RAMP_RATIO_THRESHOLD}× (this week's volume_load ÷ the average week of the last ${CHRONIC_DAYS} days). A rough, contested sports-science heuristic — not a diagnosis, not a recovery score.`,
+    title: "Volume spiked",
+    body: "This week is well above your usual four-week average. Ease up or take a rest day. Gains come back on recovery, not on cramming.",
+    threshold: `Shows at ${RAMP_RATIO_THRESHOLD}×: this week's volume ÷ average week over the last ${CHRONIC_DAYS} days.`,
   },
   shoulder: {
-    title: "Shoulders remember",
-    body: "A very big day of pushing is hard on the joint, especially with sloppy lockout. If anything feels sharp, stop. Soreness that fades is normal; pain that worsens is not.",
-    threshold: `Fires when any day in the last ${ACUTE_DAYS} reached ${SHOULDER_DAY_REPS} reps.`,
+    title: "Big pushing day",
+    body: "A huge push day loads the shoulders — especially with poor lockout. Sharp pain: stop. Soreness that fades is normal; pain that worsens is not.",
+    threshold: `Any day in the last ${ACUTE_DAYS} with ${SHOULDER_DAY_REPS}+ reps.`,
   },
   pull: {
-    title: "Pushing without pulling",
-    body: "Push-ups train the pushing muscles. On their own they build an unbalanced upper body, so include pulling work like rows or pull-ups. This app does not track that on purpose.",
-    threshold: `Fires after ${PULL_TRAINING_DAYS} training days in the last ${ACUTE_DAYS}, when the ramp and shoulder cards are not already showing.`,
+    title: "Add pulling work",
+    body: "Push-ups train pushing muscles. Balance with rows or pull-ups. This app does not track pulling on purpose.",
+    threshold: `${PULL_TRAINING_DAYS} training days in the last ${ACUTE_DAYS}, when the spike and shoulder notes are not showing.`,
   },
 };
 

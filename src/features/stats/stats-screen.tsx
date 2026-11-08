@@ -43,35 +43,35 @@ export function StatsScreen() {
         <p className={styles.empty}>Could not load stats. Try again online.</p>
       )}
       <section className={styles.hero}>
-        <p className={styles.kicker}>Weekly consistency</p>
+        <p className={styles.kicker}>Weeks on target</p>
         <p className={styles.heroValue}>
           {data ? formatRate(data.consistency.rate) : "—"}
         </p>
         <p className={styles.heroMeta}>
           {data
-            ? `${data.consistency.met} of ${data.consistency.considered} weeks hit ${data.weeklyTargetDays} days`
-            : "Trailing weeks that met your target"}
+            ? `${data.consistency.met} of ${data.consistency.considered} weeks hit your ${data.weeklyTargetDays}-day goal`
+            : "How often you met your weekly goal"}
         </p>
       </section>
 
       {loadData && (
         <section className={styles.card}>
-          <h2 className={styles.sectionTitle}>Load</h2>
+          <h2 className={styles.sectionTitle}>Volume</h2>
           <p className={styles.loadRow}>
             <span>This week</span>
             <strong>{Math.round(loadData.acuteLoad)}</strong>
           </p>
           <p className={styles.loadRow}>
-            <span>4-week week</span>
+            <span>4-week average</span>
             <strong>{Math.round(loadData.chronicWeeklyLoad)}</strong>
           </p>
           <p className={styles.loadRow}>
-            <span>Ratio</span>
+            <span>This week ÷ average</span>
             <strong>{formatRatio(loadData.ratio)}</strong>
           </p>
           <p className={styles.threshold}>
-            Visible line: {RAMP_RATIO_THRESHOLD}×. A rough, contested
-            heuristic — not a recovery score.
+            Guide line: {RAMP_RATIO_THRESHOLD}×. Rule of thumb only — not
+            medical advice.
           </p>
           {loadData.card && (
             <article className={styles.edu}>
@@ -86,11 +86,11 @@ export function StatsScreen() {
       <section className={styles.grid}>
         <div className={styles.stat}>
           <p className={styles.statValue}>{data?.lifetimeReps ?? 0}</p>
-          <p className={styles.statLabel}>Lifetime reps</p>
+          <p className={styles.statLabel}>Total reps</p>
         </div>
         <div className={styles.stat}>
           <p className={styles.statValue}>{data?.lifetimeSets ?? 0}</p>
-          <p className={styles.statLabel}>Sets</p>
+          <p className={styles.statLabel}>Total sets</p>
         </div>
         <div className={styles.stat}>
           <p className={styles.statValue}>{data?.streak.current ?? 0}</p>
@@ -98,14 +98,14 @@ export function StatsScreen() {
         </div>
         <div className={styles.stat}>
           <p className={styles.statValue}>{data?.streak.longest ?? 0}</p>
-          <p className={styles.statLabel}>Longest</p>
+          <p className={styles.statLabel}>Best streak</p>
         </div>
       </section>
 
       <section className={styles.card}>
         <h2 className={styles.sectionTitle}>Records</h2>
         <p className={styles.loadRow}>
-          <span>Biggest day</span>
+          <span>Best day</span>
           <strong>
             {data?.biggestDay
               ? `${data.biggestDay.totalReps} · ${formatCivilDay(data.biggestDay.localDate)}`
@@ -113,11 +113,11 @@ export function StatsScreen() {
           </strong>
         </p>
         <p className={styles.loadRow}>
-          <span>Biggest set</span>
+          <span>Best set</span>
           <strong>{data?.biggestSetReps ?? "—"}</strong>
         </p>
         <p className={styles.loadRow}>
-          <span>Avg per set</span>
+          <span>Reps per set</span>
           <strong>
             {data && data.lifetimeSets > 0
               ? data.averageRepsPerSet.toFixed(1)
@@ -154,13 +154,15 @@ export function StatsScreen() {
             })}
           </ul>
         ) : (
-          <p className={styles.empty}>Log a few families and they’ll split here.</p>
+          <p className={styles.empty}>
+            Try a few variations — the split shows up here.
+          </p>
         )}
       </section>
 
       {empty && (
         <p className={styles.empty}>
-          Stats fill in from sets. Nothing here is stored as its own truth.
+          Everything here is calculated from your log.
         </p>
       )}
     </div>
