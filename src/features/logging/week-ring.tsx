@@ -28,7 +28,6 @@ export function WeekRing({
   weekStart,
   today,
 }: WeekRingProps) {
-  const progress = Math.min(1, activeDays / Math.max(1, targetDays));
   const { shownActive, shownTarget, met } = weekRingLabel({
     activeDays,
     targetDays,
@@ -43,25 +42,7 @@ export function WeekRing({
     : null;
 
   return (
-    <div className={styles.ringBlock}>
-      <div className={styles.barRow}>
-        <span className={styles.barValue}>
-          {shownActive}/{shownTarget}
-        </span>
-        <div
-          className={styles.barTrack}
-          role="progressbar"
-          aria-valuenow={shownActive}
-          aria-valuemin={0}
-          aria-valuemax={shownTarget}
-          aria-label={ariaLabel}
-        >
-          <div
-            className={styles.barFill}
-            style={{ width: `${progress * 100}%` }}
-          />
-        </div>
-      </div>
+    <div className={styles.ringBlock} role="img" aria-label={ariaLabel}>
       <div className={styles.ringDots} aria-hidden="true">
         {WEEKDAY_DOTS.map((label, index) => {
           const date = addDays(weekStart, index);
