@@ -15,6 +15,7 @@
 .tab,
 .active {
   appearance: none;
+  -webkit-tap-highlight-color: transparent;
   border: 0;
   background: transparent;
   color: var(--muted);
