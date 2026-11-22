@@ -14,9 +14,39 @@ export const DEFAULT_REMINDER_TIME = "18:00";
 
 export const DAILY_REMINDER = {
   title: "Drop and Give Me 50",
-  body: "One set. That's the whole workout.",
   url: "/",
 } as const;
+
+/** Short lines used as the reminder body. Title stays DAILY_REMINDER.title. */
+export const REMINDER_BODIES = [
+  "Know yourself, know your worth.",
+  "Started from the bottom, now we here.",
+  "If I ain't the greatest, then I'm headed for it.",
+  "'Cause everybody dies but not everybody lives.",
+  "Yeah, I want it all, that's why I strive for it.",
+  "If you thinkin' I'ma quit before I die, dream on.",
+  "Things get dark, but my aura just starts glowing.",
+] as const;
+
+export function pickReminderBody(random: () => number = Math.random): (typeof REMINDER_BODIES)[number] {
+  const index = Math.min(
+    REMINDER_BODIES.length - 1,
+    Math.max(0, Math.floor(random() * REMINDER_BODIES.length)),
+  );
+  return REMINDER_BODIES[index];
+}
+
+export function reminderPayload(random: () => number = Math.random): {
+  title: typeof DAILY_REMINDER.title;
+  body: (typeof REMINDER_BODIES)[number];
+  url: typeof DAILY_REMINDER.url;
+} {
+  return {
+    title: DAILY_REMINDER.title,
+    body: pickReminderBody(random),
+    url: DAILY_REMINDER.url,
+  };
+}
 
 const TIME_RE = /^(\d{1,2}):(\d{2})(?::\d{2})?$/;
 

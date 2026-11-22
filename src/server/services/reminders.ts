@@ -85,8 +85,6 @@ export async function sendDueReminders(now = new Date()): Promise<ReminderRunRes
     }
   }
 
-  const payload = dailyReminderPayload();
-
   for (const [userId, list] of byUser) {
     const first = list[0];
     const localDate = localByUser.get(userId)!;
@@ -111,6 +109,7 @@ export async function sendDueReminders(now = new Date()): Promise<ReminderRunRes
       continue;
     }
 
+    const payload = dailyReminderPayload();
     let delivered = false;
     for (const sub of list) {
       if (sub.failureCount >= FAILURE_DROP_AFTER) {

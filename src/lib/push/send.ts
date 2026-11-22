@@ -1,5 +1,5 @@
 import { sendNotification, setVapidDetails, WebPushError } from "web-push";
-import { DAILY_REMINDER } from "@/domain/reminder";
+import { reminderPayload } from "@/domain/reminder";
 import { env } from "@/lib/env";
 
 export type PushSendResult = "sent" | "gone" | "failed";
@@ -49,6 +49,8 @@ export async function sendPushPayload(input: {
   }
 }
 
-export function dailyReminderPayload(): { title: string; body: string; url: string } {
-  return { ...DAILY_REMINDER };
+export function dailyReminderPayload(
+  random: () => number = Math.random,
+): { title: string; body: string; url: string } {
+  return reminderPayload(random);
 }

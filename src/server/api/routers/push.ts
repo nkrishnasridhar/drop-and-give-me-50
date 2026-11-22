@@ -1,8 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
-import { DAILY_REMINDER } from "@/domain/reminder";
-import { getVapidPublicKey, sendPushPayload } from "@/lib/push/send";
+import { dailyReminderPayload, getVapidPublicKey, sendPushPayload } from "@/lib/push/send";
 import { protectedProcedure, router } from "@/server/api/trpc";
 import type { db as Database } from "@/server/db/client";
 import { pushSubscriptions, userSettings } from "@/server/db/schema";
@@ -131,13 +130,14 @@ export const pushRouter = router({
     }
 
     const now = new Date();
+    const payload = dailyReminderPayload();
     let sent = 0;
     for (const sub of subs) {
       const outcome = await sendPushPayload({
         endpoint: sub.endpoint,
         p256dh: sub.p256dh,
         auth: sub.auth,
-        payload: DAILY_REMINDER,
+        payload,
       });
       if (outcome === "sent") {
         sent += 1;

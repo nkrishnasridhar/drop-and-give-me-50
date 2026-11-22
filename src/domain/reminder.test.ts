@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  DAILY_REMINDER,
   formatReminderTime,
   isReminderDue,
   normalizeReminderTime,
+  pickReminderBody,
+  REMINDER_BODIES,
+  reminderPayload,
   reminderTimeToMinutes,
   snapReminderMinutes,
 } from "./reminder";
@@ -21,6 +25,29 @@ function due(partial: Partial<Parameters<typeof isReminderDue>[0]> = {}) {
     ...partial,
   });
 }
+
+describe("pickReminderBody", () => {
+  it("keeps every line short enough for a notification preview", () => {
+    for (const line of REMINDER_BODIES) {
+      expect(line.length).toBeLessThanOrEqual(50);
+    }
+  });
+
+  it("hits the first and last lines from the ends of the random range", () => {
+    expect(pickReminderBody(() => 0)).toBe(REMINDER_BODIES[0]);
+    expect(pickReminderBody(() => 1 - Number.EPSILON)).toBe(
+      REMINDER_BODIES[REMINDER_BODIES.length - 1],
+    );
+  });
+
+  it("keeps the title and url fixed while the body comes from the pool", () => {
+    const payload = reminderPayload(() => 0);
+    expect(payload.title).toBe(DAILY_REMINDER.title);
+    expect(payload.url).toBe(DAILY_REMINDER.url);
+    expect(REMINDER_BODIES).toContain(payload.body);
+    expect(payload.body).toBe(REMINDER_BODIES[0]);
+  });
+});
 
 describe("reminderTimeToMinutes", () => {
   it("parses HH:MM and HH:MM:SS", () => {
